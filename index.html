@@ -6,16 +6,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>BTC Ultimate Dashboard V2</title>
+    <title>Crypto Command Center</title>
     <style>
         :root {
             --bg-color: #000000;
+            --card-bg: #121212;
             --text-main: #ffffff;
             --text-dim: #888888;
             --green: #0ecb81;
             --red: #f6465d;
-            --orange: #f3ba2f;
-            --card-bg: #111111;
+            --btc-orange: #f7931a;
+            --eth-purple: #a0b0ff; /* 淡紫色适配黑底 */
+            --bnb-yellow: #f3ba2f;
         }
         
         body {
@@ -25,351 +27,372 @@
             margin: 0;
             height: 100vh;
             overflow: hidden;
+            /* 适配刘海和圆角 */
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-            display: grid;
-            grid-template-columns: 1.2fr 1fr 1fr; /* 三栏布局 */
-            gap: 20px;
             box-sizing: border-box;
-            padding: 20px;
+            display: flex;
+            gap: 15px;
+            padding: 15px;
         }
 
-        /* 通用卡片样式 */
+        /* 左侧：行情区 (占宽 55%) */
+        .col-market {
+            flex: 5.5;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 右侧：数据区 (占宽 45%) */
+        .col-data {
+            flex: 4.5;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 通用卡片 */
         .card {
-            background: var(--card-bg);
-            border-radius: 24px;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-        }
-
-        /* 左侧：价格行情 */
-        .section-price {
-            grid-column: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .label {
-            font-size: 1rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        #price {
-            font-size: 14vw; /* 巨型字体 */
-            font-weight: 800;
-            line-height: 1;
-            letter-spacing: -2px;
-            margin: 10px 0;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .price-stats {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-top: 20px;
-        }
-
-        .stat-item {
-            text-align: left;
-        }
-        .stat-val { font-size: 1.8rem; font-weight: 600; font-family: "SF Mono", monospace; }
-        .stat-percent { font-size: 2.5rem; font-weight: 700; }
-        
-        #sats-per-dollar {
-            font-size: 1.5rem;
-            color: var(--orange);
-            font-family: "SF Mono", monospace;
-            margin-top: 10px;
-        }
-
-        /* 中间：链上数据 */
-        .section-chain {
-            display: grid;
-            grid-template-rows: 1fr 1fr 1fr;
-            gap: 20px;
-            background: transparent;
-            padding: 0;
-        }
-        
-        .mini-card {
             background: var(--card-bg);
             border-radius: 20px;
             padding: 20px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: flex-start;
+            position: relative;
         }
 
-        .big-data { font-size: 3rem; font-weight: 700; font-family: "SF Mono", monospace; }
-        .unit { font-size: 1rem; color: var(--text-dim); margin-left: 5px; }
-        
-        /* 动态Gas颜色 */
-        .gas-low { color: var(--green); }
-        .gas-med { color: var(--orange); }
-        .gas-high { color: var(--red); }
-
-        /* 出块时间条 */
-        #block-time-container {
-            width: 100%;
-            height: 6px;
-            background: #333;
-            border-radius: 3px;
-            margin-top: 15px;
-            overflow: hidden;
-        }
-        #block-progress {
-            height: 100%;
-            width: 0%;
-            background: var(--green);
-            transition: width 1s linear, background 0.5s;
-        }
-
-        /* 右侧：宏观周期 */
-        .section-macro {
-            display: grid;
-            grid-template-rows: 1.5fr 1fr;
-            gap: 20px;
-            background: transparent;
-            padding: 0;
-        }
-
-        .countdown-text { font-size: 1.2rem; color: var(--text-main); margin-top: 10px;}
-
-        /* 新增：恐慌指数图片卡片样式 */
-        .fng-image-card {
-            padding: 10px !important; /* 减小内边距让图片更大 */
+        .label {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: var(--card-bg); /* 保持深色背景 */
-        }
-        .fng-image-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* 保持图片比例 */
-            border-radius: 10px;
+            gap: 6px;
         }
 
-        /* 底部状态栏 */
-        .footer-status {
+        /* 货币图标小圆点 */
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .dot-btc { background: var(--btc-orange); }
+        .dot-eth { background: var(--eth-purple); }
+        .dot-bnb { background: var(--bnb-yellow); }
+
+        /* === BTC 大卡片 === */
+        .btc-card {
+            flex: 1.2; /* 稍微高一点 */
+        }
+        #btc-price {
+            font-size: 10vw; /* 巨大字体 */
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -3px;
+            margin: 10px 0;
+        }
+        .btc-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 10px;
+        }
+        .stat-group { display: flex; flex-direction: column; }
+        .stat-val { font-size: 1.5rem; font-weight: 600; font-family: "SF Mono", monospace; }
+        #sats-text { color: var(--btc-orange); font-family: "SF Mono", monospace; margin-top: 5px; font-size: 1.1rem; }
+
+        /* === ETH & BNB 并排区 === */
+        .alts-row {
+            flex: 1;
+            display: flex;
+            gap: 15px;
+        }
+        .alt-card {
+            flex: 1;
+            justify-content: space-between;
+        }
+        .alt-price { font-size: 3.5vw; font-weight: 700; font-family: "SF Mono", monospace; letter-spacing: -1px; }
+        .alt-change { font-size: 1.8vw; font-weight: 600; }
+
+        /* === 右侧数据网格 === */
+        .data-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .mini-card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .big-num { font-size: 2rem; font-weight: 700; font-family: "SF Mono", monospace; }
+        .unit { font-size: 0.8rem; color: var(--text-dim); }
+
+        /* 恐慌指数图片 */
+        .fng-card {
+            padding: 0;
+            overflow: hidden;
+            background: #000; /* 图片自带背景，设为黑防止白边 */
+            align-items: center;
+        }
+        .fng-card img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        /* 底部出块时间条 */
+        .block-timer-card {
+            height: 60px; /* 固定高度 */
+            justify-content: center;
+            padding: 0 20px;
+        }
+        .timer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 8px;
+        }
+        #last-block-time { font-size: 1.5rem; font-weight: 700; font-family: "SF Mono", monospace; }
+        
+        #progress-bg {
+            width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden;
+        }
+        #progress-bar {
+            height: 100%; width: 0%; background: var(--green); transition: width 1s linear, background 0.5s;
+        }
+
+        /* 颜色类 */
+        .up { color: var(--green); }
+        .down { color: var(--red); }
+        .gas-low { color: var(--green); }
+        .gas-med { color: var(--bnb-yellow); }
+        .gas-high { color: var(--red); }
+
+        /* 底部时钟 */
+        #clock-overlay {
             position: absolute;
             bottom: 20px;
             right: 20px;
             font-size: 0.8rem;
-            color: #333;
+            color: #444;
             font-family: monospace;
+            z-index: 10;
         }
 
     </style>
 </head>
 <body>
 
-    <div class="card section-price">
-        <div>
-            <div class="label">BTC / USDT</div>
-            <div id="price">---.--</div>
-            <div id="sats-per-dollar">1 USD = --- Sats</div>
-        </div>
+    <div class="col-market">
         
-        <div class="price-stats">
-            <div class="stat-item">
-                <div class="label">24h High</div>
-                <div class="stat-val" id="high-price">---</div>
+        <div class="card btc-card">
+            <div class="label"><span class="dot dot-btc"></span>BTC / USDT</div>
+            <div id="btc-price">---</div>
+            <div id="sats-text">1 USD = --- Sats</div>
+            
+            <div class="btc-stats">
+                <div class="stat-group">
+                    <div class="label">24h Change</div>
+                    <div class="stat-val" id="btc-change">--%</div>
+                </div>
+                <div class="stat-group">
+                    <div class="label">24h Range</div>
+                    <div class="stat-val"><span id="btc-low">--</span> - <span id="btc-high">--</span></div>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="label">24h Low</div>
-                <div class="stat-val" id="low-price">---</div>
+        </div>
+
+        <div class="alts-row">
+            <div class="card alt-card">
+                <div class="label"><span class="dot dot-eth"></span>ETH</div>
+                <div class="alt-price" id="eth-price">---</div>
+                <div class="alt-change" id="eth-change">--%</div>
             </div>
-            <div class="stat-item">
-                <div class="label">Change</div>
-                <div class="stat-percent" id="percent">--%</div>
+            <div class="card alt-card">
+                <div class="label"><span class="dot dot-bnb"></span>BNB</div>
+                <div class="alt-price" id="bnb-price">---</div>
+                <div class="alt-change" id="bnb-change">--%</div>
             </div>
         </div>
     </div>
 
-    <div class="section-chain">
-        <div class="mini-card">
-            <div class="label">Block Height</div>
-            <div>
-                <span class="big-data" id="block-height">---</span>
+    <div class="col-data">
+        
+        <div class="data-grid">
+            <div class="mini-card">
+                <div class="label">Block Height</div>
+                <div class="big-num" id="block-height">---</div>
+            </div>
+
+            <div class="mini-card">
+                <div class="label">Network Fee</div>
+                <div>
+                    <span class="big-num" id="gas-fee">--</span> <span class="unit">sat/vB</span>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <div class="label">Halving (Est.)</div>
+                <div class="big-num" id="halving-date" style="font-size: 1.6rem;">----/--</div>
+                <div class="unit">Blocks left: <span id="blocks-left" style="color:var(--bnb-yellow)">---</span></div>
+            </div>
+
+            <div class="mini-card fng-card">
+                 <img src="https://alternative.me/crypto/fear-and-greed-index.png?theme=dark" alt="FNG" />
             </div>
         </div>
 
-        <div class="mini-card">
-            <div class="label">Network Fee (Fast)</div>
-            <div>
-                <span class="big-data" id="gas-fee">--</span>
-                <span class="unit">sat/vB</span>
+        <div class="card block-timer-card">
+            <div class="timer-row">
+                <div class="label">Last Block Ago</div>
+                <div id="last-block-time">--:--</div>
+            </div>
+            <div id="progress-bg">
+                <div id="progress-bar"></div>
             </div>
         </div>
 
-        <div class="mini-card">
-            <div class="label">Last Block Mined</div>
-            <div class="big-data" id="last-block-time">--:--</div>
-            <div id="block-time-container">
-                <div id="block-progress"></div>
-            </div>
-            <div class="unit" id="block-ago-text">ago</div>
-        </div>
     </div>
 
-    <div class="section-macro">
-        <div class="mini-card">
-            <div class="label">Next Halving (Est.)</div>
-            <div class="big-data" style="font-size: 2.2rem;" id="halving-date">----/--</div>
-            <div class="countdown-text">
-                Rem. Blocks: <span id="blocks-left" style="color:var(--orange)">---</span>
-            </div>
-        </div>
-
-        <div class="mini-card fng-image-card">
-            <img src="https://alternative.me/crypto/fear-and-greed-index.png?theme=dark" alt="Latest Crypto Fear & Greed Index" />
-        </div>
-    </div>
-
-    <div class="footer-status" id="clock">Connecting...</div>
+    <div id="clock-overlay">Connecting...</div>
 
     <script>
-        // --- API Endpoints ---
-        const API_BINANCE = 'https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT';
+        // --- 核心配置 ---
+        // 批量请求价格：BTC, ETH, BNB
+        const API_PRICES = 'https://data-api.binance.vision/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","BNBUSDT"]';
         const API_MEMPOOL_TIP = 'https://mempool.space/api/blocks/tip/height';
         const API_MEMPOOL_FEES = 'https://mempool.space/api/v1/fees/recommended';
-        const API_MEMPOOL_BLOCKS = 'https://mempool.space/api/v1/blocks'; // 获取最新区块列表
-        // 注意：API_FNG 已经被移除
-
-        // --- Data Variables ---
-        let lastBlockTime = Date.now(); 
-        const HALVING_INTERVAL = 210000;
-        // 2024年4月已完成第4次减半(840,000)，下一次是 1,050,000
-        const NEXT_HALVING_BLOCK = 1050000; 
+        const API_MEMPOOL_BLOCKS = 'https://mempool.space/api/v1/blocks';
+        
+        const NEXT_HALVING_BLOCK = 1050000;
+        let lastBlockTimestamp = Date.now();
 
         // --- DOM Elements ---
-        const els = {
-            price: document.getElementById('price'),
-            percent: document.getElementById('percent'),
-            high: document.getElementById('high-price'),
-            low: document.getElementById('low-price'),
-            sats: document.getElementById('sats-per-dollar'),
-            height: document.getElementById('block-height'),
-            gas: document.getElementById('gas-fee'),
-            lastBlock: document.getElementById('last-block-time'),
-            halvingDate: document.getElementById('halving-date'),
-            blocksLeft: document.getElementById('blocks-left'),
-            progress: document.getElementById('block-progress'),
-            clock: document.getElementById('clock')
-            // 注意：与 FNG 相关的元素引用已被移除
-        };
-
-        // 1. 获取价格 (每2秒)
-        async function fetchPrice() {
+        const el = (id) => document.getElementById(id);
+        
+        // 1. 获取价格
+        async function fetchPrices() {
             try {
-                const res = await fetch(API_BINANCE);
+                const res = await fetch(API_PRICES);
                 const data = await res.json();
                 
-                const price = parseFloat(data.lastPrice);
-                const change = parseFloat(data.priceChangePercent);
+                // data 是一个数组，顺序不一定，需要按 symbol 查找
+                const getCoin = (symbol) => data.find(item => item.symbol === symbol);
                 
-                // Price Update
-                els.price.innerText = price.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-                els.price.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
-                
-                // Stats
-                els.percent.innerText = (change > 0 ? '+' : '') + change.toFixed(2) + '%';
-                els.percent.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
-                els.high.innerText = parseFloat(data.highPrice).toLocaleString('en-US', {maximumFractionDigits:0});
-                els.low.innerText = parseFloat(data.lowPrice).toLocaleString('en-US', {maximumFractionDigits:0});
+                const btc = getCoin('BTCUSDT');
+                const eth = getCoin('ETHUSDT');
+                const bnb = getCoin('BNBUSDT');
 
-                // Sats per Dollar
-                const sats = Math.floor(100000000 / price);
-                els.sats.innerText = `1 USD = ${sats} Sats`;
-
-            } catch(e) { console.error('Price API Error', e); }
-        }
-
-        // 2. 获取链上数据 (每15秒，Mempool API有限制不要太快)
-        async function fetchChainData() {
-            try {
-                // Height
-                const resHeight = await fetch(API_MEMPOOL_TIP);
-                const height = await resHeight.text(); // text format
-                const currentHeight = parseInt(height);
-                els.height.innerText = currentHeight.toLocaleString();
-
-                // Fees
-                const resFees = await fetch(API_MEMPOOL_FEES);
-                const fees = await resFees.json();
-                const fastFee = fees.fastestFee;
-                els.gas.innerText = fastFee;
-                // 颜色逻辑：<20 绿色, 20-50 橙色, >50 红色
-                els.gas.className = 'big-data ' + (fastFee < 20 ? 'gas-low' : (fastFee < 50 ? 'gas-med' : 'gas-high'));
-
-                // Block Time (获取最近出的块的时间戳)
-                const resBlocks = await fetch(API_MEMPOOL_BLOCKS);
-                const blocks = await resBlocks.json();
-                if(blocks && blocks.length > 0) {
-                    lastBlockTime = blocks[0].timestamp * 1000;
+                // 更新 BTC
+                if(btc) {
+                    const price = parseFloat(btc.lastPrice);
+                    const change = parseFloat(btc.priceChangePercent);
+                    el('btc-price').innerText = price.toLocaleString('en-US', {maximumFractionDigits:0});
+                    el('btc-price').style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+                    el('btc-change').innerText = (change>0?'+':'') + change.toFixed(2) + '%';
+                    el('btc-change').style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+                    el('btc-high').innerText = parseFloat(btc.highPrice).toLocaleString('en-US',{maximumFractionDigits:0});
+                    el('btc-low').innerText = parseFloat(btc.lowPrice).toLocaleString('en-US',{maximumFractionDigits:0});
+                    
+                    // Sats
+                    const sats = Math.floor(100000000 / price);
+                    el('sats-text').innerText = `1 USD = ${sats} Sats`;
                 }
 
-                // Halving Calc
-                const blocksRemaining = NEXT_HALVING_BLOCK - currentHeight;
-                els.blocksLeft.innerText = blocksRemaining.toLocaleString();
-                
-                // 估算日期 (10分钟一个块)
-                const minsRemaining = blocksRemaining * 10;
-                const date = new Date(Date.now() + minsRemaining * 60000);
-                els.halvingDate.innerText = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}`;
+                // 更新 ETH
+                if(eth) {
+                    const price = parseFloat(eth.lastPrice);
+                    const change = parseFloat(eth.priceChangePercent);
+                    el('eth-price').innerText = price.toLocaleString('en-US', {maximumFractionDigits:2});
+                    el('eth-change').innerText = (change>0?'+':'') + change.toFixed(2) + '%';
+                    el('eth-change').style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+                    // 动态调整字体大小防止溢出
+                    if(price > 9999) el('eth-price').style.fontSize = "3vw";
+                }
 
-            } catch(e) { console.error('Mempool API Error', e); }
+                // 更新 BNB
+                if(bnb) {
+                    const price = parseFloat(bnb.lastPrice);
+                    const change = parseFloat(bnb.priceChangePercent);
+                    el('bnb-price').innerText = price.toLocaleString('en-US', {maximumFractionDigits:1});
+                    el('bnb-change').innerText = (change>0?'+':'') + change.toFixed(2) + '%';
+                    el('bnb-change').style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+                }
+
+            } catch(e) { console.error(e); }
         }
 
-        // 注意：fetchFNG 函数已被移除
+        // 2. 链上数据
+        async function fetchChain() {
+            try {
+                // Height
+                const hRes = await fetch(API_MEMPOOL_TIP);
+                const height = parseInt(await hRes.text());
+                el('block-height').innerText = height.toLocaleString();
 
-        // 3. 本地定时器 (每秒刷新：时钟、出块计时条)
-        function updateTickers() {
-            const now = Date.now();
-            
+                // Fees
+                const fRes = await fetch(API_MEMPOOL_FEES);
+                const fees = await fRes.json();
+                const fee = fees.fastestFee;
+                el('gas-fee').innerText = fee;
+                el('gas-fee').className = 'big-num ' + (fee < 20 ? 'gas-low' : (fee < 50 ? 'gas-med' : 'gas-high'));
+
+                // Block Time
+                const bRes = await fetch(API_MEMPOOL_BLOCKS);
+                const blocks = await bRes.json();
+                if(blocks && blocks.length) lastBlockTimestamp = blocks[0].timestamp * 1000;
+
+                // Halving
+                const left = NEXT_HALVING_BLOCK - height;
+                el('blocks-left').innerText = left.toLocaleString();
+                const estDate = new Date(Date.now() + left * 10 * 60000);
+                el('halving-date').innerText = `${estDate.getFullYear()}/${(estDate.getMonth()+1).toString().padStart(2,'0')}`;
+
+            } catch(e) { console.error(e); }
+        }
+
+        // 3. 动画与计时器
+        function tick() {
             // 时钟
-            els.clock.innerText = new Date().toLocaleTimeString('en-US', {hour12:false});
+            el('clock-overlay').innerText = new Date().toLocaleTimeString('en-US', {hour12:false});
 
-            // 上个区块过去的时间
-            const diffSeconds = Math.floor((now - lastBlockTime) / 1000);
-            const minutes = Math.floor(diffSeconds / 60);
-            const seconds = diffSeconds % 60;
-            els.lastBlock.innerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            // 出块计时
+            const diff = Math.floor((Date.now() - lastBlockTimestamp) / 1000);
+            const m = Math.floor(diff / 60);
+            const s = diff % 60;
+            el('last-block-time').innerText = `${m}:${s.toString().padStart(2,'0')}`;
 
-            // 进度条 (以10分钟/600秒为基准)
-            // 0-10分钟：绿色， >10分钟：变成红色警告
-            let pct = (diffSeconds / 600) * 100;
-            if (pct > 100) pct = 100;
+            // 进度条 (10分钟基准)
+            let pct = (diff / 600) * 100;
+            if(pct > 100) pct = 100;
+            el('progress-bar').style.width = pct + '%';
             
-            els.progress.style.width = pct + '%';
-            if (diffSeconds > 600) {
-                // 超过10分钟没出块，变红
-                els.progress.style.background = 'var(--red)';
-                els.lastBlock.style.color = 'var(--red)';
+            if(diff > 600) { // 超过10分钟变红
+                el('progress-bar').style.backgroundColor = 'var(--red)';
+                el('last-block-time').style.color = 'var(--red)';
             } else {
-                els.progress.style.background = 'var(--green)';
-                els.lastBlock.style.color = 'var(--text-main)';
+                el('progress-bar').style.backgroundColor = 'var(--green)';
+                el('last-block-time').style.color = 'var(--text-main)';
             }
         }
 
-        // Init
-        fetchPrice();
-        fetchChainData();
-        // fetchFNG() 已移除
+        // 启动
+        fetchPrices();
+        fetchChain();
+        setInterval(fetchPrices, 2000);
+        setInterval(fetchChain, 15000);
+        setInterval(tick, 1000);
 
-        setInterval(fetchPrice, 2000); // 2秒刷价格
-        setInterval(fetchChainData, 15000); // 15秒刷链上
-        // setInterval(fetchFNG, 3600000); 已移除
-        setInterval(updateTickers, 1000); // 1秒刷本地动画
+        // 页面可见性恢复刷新
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) { fetchPrices(); fetchChain(); }
+        });
 
     </script>
 </body>
