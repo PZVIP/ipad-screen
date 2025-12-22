@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iPad Dashboard</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>iPad Dashboard - REST</title>
     <style>
         body {
             background-color: #000000;
@@ -16,82 +18,139 @@
             height: 100vh;
             margin: 0;
             overflow: hidden; /* 禁止滚动 */
+            -webkit-user-select: none; /* 禁止长按选中文字 */
         }
         #pair {
             font-size: 3rem;
             color: #888;
             margin-bottom: 20px;
+            font-weight: 300;
         }
         #price {
-            font-size: 12rem; /* 超大字体 */
+            font-size: 13rem; /* 超大字体 */
             font-weight: bold;
-            font-variant-numeric: tabular-nums; /* 防止数字跳动导致宽度变化 */
+            line-height: 1;
+            font-variant-numeric: tabular-nums; /* 防止数字跳动导致宽度抖动 */
+            transition: color 0.3s ease;
         }
         #percent {
             font-size: 4rem;
-            margin-top: 20px;
+            margin-top: 30px;
+            font-weight: 500;
         }
         .up { color: #0ecb81; } /* 涨-绿色 */
         .down { color: #f6465d; } /* 跌-红色 */
-        
+        .text-white { color: #ffffff; }
+
         /* 简单的底栏时间 */
         #clock {
             position: absolute;
             bottom: 30px;
-            font-size: 1.5rem;
-            color: #555;
+            font-size: 1.2rem;
+            color: #444;
+            font-family: monospace;
+        }
+        
+        /* 加载状态的闪烁动画 */
+        .loading {
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
         }
     </style>
 </head>
 <body>
 
     <div id="pair">BTC / USDT</div>
-    <div id="price">Loading...</div>
+    <div id="price" class="loading">Loading</div>
     <div id="percent">--%</div>
-    <div id="clock">00:00:00</div>
+    <div id="clock">Connecting...</div>
 
     <script>
-        // 1. WebSocket 连接币安 (复用你 ESP32 的经验)
-        const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
-        
+        // --- 配置区域 ---
+        const SYMBOL = 'BTCUSDT'; 
+        // 使用你指定的 data-api.binance.vision 接口 (24hr 接口包含价格和涨跌幅)
+        const API_URL = `https://data-api.binance.vision/api/v3/ticker/24hr?symbol=${SYMBOL}`;
+        const UPDATE_INTERVAL = 2000; // 刷新频率：2000毫秒 = 2秒 (太快容易触发限制)
+        // ----------------
+
         const priceEl = document.getElementById('price');
         const percentEl = document.getElementById('percent');
         const clockEl = document.getElementById('clock');
         let prevPrice = 0;
 
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const price = parseFloat(data.c).toFixed(2); // 最新价
-            const percent = parseFloat(data.P).toFixed(2); // 24h 涨跌幅
+        // 核心获取数据的函数
+        async function fetchPrice() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
 
-            // 更新价格
-            priceEl.innerText = price;
-            
-            // 颜色判断
-            if (price > prevPrice) {
-                priceEl.className = 'up';
-            } else if (price < prevPrice) {
-                priceEl.className = 'down';
+                // 解析数据
+                // lastPrice: 最新成交价
+                // priceChangePercent: 24小时涨跌幅
+                const price = parseFloat(data.lastPrice).toFixed(2);
+                const percent = parseFloat(data.priceChangePercent).toFixed(2);
+
+                // 1. 更新价格显示
+                priceEl.innerText = price;
+                priceEl.classList.remove('loading'); // 移除加载动画
+
+                // 2. 颜色判断逻辑 (比上一次高就是绿，低就是红)
+                if (prevPrice > 0) {
+                    if (price > prevPrice) {
+                        priceEl.className = 'up';
+                    } else if (price < prevPrice) {
+                        priceEl.className = 'down';
+                    }
+                    // 如果价格没变，保持原来的颜色
+                } else {
+                    // 第一次加载，根据涨跌幅决定颜色
+                    priceEl.className = percent >= 0 ? 'up' : 'down';
+                }
+                prevPrice = price;
+
+                // 3. 更新涨跌幅显示
+                percentEl.innerText = (percent > 0 ? '+' : '') + percent + '%';
+                percentEl.className = percent >= 0 ? 'up' : 'down';
+
+                // 更新状态栏
+                updateClock(true);
+
+            } catch (error) {
+                console.error('Fetch error:', error);
+                // 如果出错，把时间变成红色提示
+                clockEl.style.color = '#f6465d';
+                clockEl.innerText = 'Connection Error - Retrying...';
             }
-            prevPrice = price;
+        }
 
-            // 更新涨跌幅
-            percentEl.innerText = (percent > 0 ? '+' : '') + percent + '%';
-            percentEl.className = percent > 0 ? 'up' : 'down';
-        };
-
-        // 2. 更新底部时间
-        setInterval(() => {
+        // 简单的时钟更新
+        function updateClock(isConnected) {
             const now = new Date();
-            clockEl.innerText = now.toLocaleTimeString();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            if(isConnected) {
+                clockEl.style.color = '#444';
+                clockEl.innerText = timeString + ' • Live';
+            }
+        }
+
+        // 启动程序
+        fetchPrice(); // 先运行一次
+        setInterval(fetchPrice, UPDATE_INTERVAL); // 然后每隔 x 秒运行一次
+        
+        // 单独的时间每秒跳动
+        setInterval(() => {
+            if(clockEl.innerText.includes('Live')) {
+                updateClock(true);
+            }
         }, 1000);
 
-        // 防止 iPad 休眠导致 socket 断开，加一个简单的重连机制
-        ws.onclose = () => {
-            setTimeout(() => {
-                location.reload();
-            }, 5000);
-        };
     </script>
 </body>
 </html>
