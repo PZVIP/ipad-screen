@@ -3,190 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
-    <title>Bitcoin Dashboard</title>
+    <title>BTC Ultimate Dashboard V2</title>
     <style>
+        :root {
+            --bg-color: #000000;
+            --text-main: #ffffff;
+            --text-dim: #888888;
+            --green: #0ecb81;
+            --red: #f6465d;
+            --orange: #f3ba2f;
+            --card-bg: #111111;
+        }
+        
         body {
-            background-color: #000000;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, monospace;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr; /* 三栏布局 */
+            gap: 20px;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        /* 通用卡片样式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* 左侧：价格行情 */
+        .section-price {
+            grid-column: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .label {
+            font-size: 1rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        #price {
+            font-size: 14vw; /* 巨型字体 */
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -2px;
+            margin: 10px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .price-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: left;
+        }
+        .stat-val { font-size: 1.8rem; font-weight: 600; font-family: "SF Mono", monospace; }
+        .stat-percent { font-size: 2.5rem; font-weight: 700; }
+        
+        #sats-per-dollar {
+            font-size: 1.5rem;
+            color: var(--orange);
+            font-family: "SF Mono", monospace;
+            margin-top: 10px;
+        }
+
+        /* 中间：链上数据 */
+        .section-chain {
+            display: grid;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 20px;
+            background: transparent;
+            padding: 0;
+        }
+        
+        .mini-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .big-data { font-size: 3rem; font-weight: 700; font-family: "SF Mono", monospace; }
+        .unit { font-size: 1rem; color: var(--text-dim); margin-left: 5px; }
+        
+        /* 动态Gas颜色 */
+        .gas-low { color: var(--green); }
+        .gas-med { color: var(--orange); }
+        .gas-high { color: var(--red); }
+
+        /* 出块时间条 */
+        #block-time-container {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        #block-progress {
+            height: 100%;
+            width: 0%;
+            background: var(--green);
+            transition: width 1s linear, background 0.5s;
+        }
+
+        /* 右侧：宏观周期 */
+        .section-macro {
+            display: grid;
+            grid-template-rows: 1.5fr 1fr;
+            gap: 20px;
+            background: transparent;
+            padding: 0;
+        }
+
+        .countdown-text { font-size: 1.2rem; color: var(--text-main); margin-top: 10px;}
+
+        /* 新增：恐慌指数图片卡片样式 */
+        .fng-image-card {
+            padding: 10px !important; /* 减小内边距让图片更大 */
+            display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden; /* 禁止滚动 */
-            -webkit-user-select: none; /* 禁止选中文本 */
-            
-            /* 关键：利用 padding 避开顶部的刘海/状态栏区域 */
-            padding-top: env(safe-area-inset-top);
-            box-sizing: border-box;
+            background: var(--card-bg); /* 保持深色背景 */
         }
-
-        /* 交易对标题 */
-        #pair {
-            font-size: 3vw; /* 响应式字体 */
-            color: #666;
-            margin-bottom: 2vh;
-            font-weight: 400;
-            letter-spacing: 2px;
-        }
-
-        /* 价格大字 */
-        #price {
-            font-size: 18vw; /* 超大字体，根据屏幕宽度自动缩放 */
-            font-weight: 700;
-            line-height: 1;
-            font-variant-numeric: tabular-nums; /* 等宽数字，防止跳动 */
-            transition: color 0.2s ease;
-        }
-
-        /* 涨跌幅 */
-        #percent {
-            font-size: 5vw;
-            margin-top: 3vh;
-            font-weight: 500;
-            padding: 5px 15px;
+        .fng-image-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 保持图片比例 */
             border-radius: 10px;
         }
 
-        /* 颜色定义 */
-        .up { color: #0ecb81; } /* 涨-绿色 */
-        .down { color: #f6465d; } /* 跌-红色 */
-        .neutral { color: #ffffff; }
-
         /* 底部状态栏 */
-        #footer {
+        .footer-status {
             position: absolute;
-            bottom: 4vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        #clock {
-            font-size: 1.5rem;
-            color: #444;
-            font-family: "SF Mono", monospace;
-        }
-
-        #status {
+            bottom: 20px;
+            right: 20px;
             font-size: 0.8rem;
             color: #333;
+            font-family: monospace;
         }
-        
-        /* 加载/重连时的呼吸动画 */
-        .blink {
-            animation: blinker 1.5s linear infinite;
-        }
-        @keyframes blinker {
-            50% { opacity: 0.3; }
-        }
+
     </style>
 </head>
 <body>
 
-    <div id="pair">BTC / USDT</div>
-    <div id="price" class="blink">---.--</div>
-    <div id="percent">--%</div>
-
-    <div id="footer">
-        <div id="clock">Loading...</div>
-        <div id="status">Data via Binance Vision</div>
+    <div class="card section-price">
+        <div>
+            <div class="label">BTC / USDT</div>
+            <div id="price">---.--</div>
+            <div id="sats-per-dollar">1 USD = --- Sats</div>
+        </div>
+        
+        <div class="price-stats">
+            <div class="stat-item">
+                <div class="label">24h High</div>
+                <div class="stat-val" id="high-price">---</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">24h Low</div>
+                <div class="stat-val" id="low-price">---</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">Change</div>
+                <div class="stat-percent" id="percent">--%</div>
+            </div>
+        </div>
     </div>
 
+    <div class="section-chain">
+        <div class="mini-card">
+            <div class="label">Block Height</div>
+            <div>
+                <span class="big-data" id="block-height">---</span>
+            </div>
+        </div>
+
+        <div class="mini-card">
+            <div class="label">Network Fee (Fast)</div>
+            <div>
+                <span class="big-data" id="gas-fee">--</span>
+                <span class="unit">sat/vB</span>
+            </div>
+        </div>
+
+        <div class="mini-card">
+            <div class="label">Last Block Mined</div>
+            <div class="big-data" id="last-block-time">--:--</div>
+            <div id="block-time-container">
+                <div id="block-progress"></div>
+            </div>
+            <div class="unit" id="block-ago-text">ago</div>
+        </div>
+    </div>
+
+    <div class="section-macro">
+        <div class="mini-card">
+            <div class="label">Next Halving (Est.)</div>
+            <div class="big-data" style="font-size: 2.2rem;" id="halving-date">----/--</div>
+            <div class="countdown-text">
+                Rem. Blocks: <span id="blocks-left" style="color:var(--orange)">---</span>
+            </div>
+        </div>
+
+        <div class="mini-card fng-image-card">
+            <img src="https://alternative.me/crypto/fear-and-greed-index.png?theme=dark" alt="Latest Crypto Fear & Greed Index" />
+        </div>
+    </div>
+
+    <div class="footer-status" id="clock">Connecting...</div>
+
     <script>
-        // --- 核心配置 ---
-        const SYMBOL = 'BTCUSDT';
-        // 使用更稳定的 REST API
-        const API_URL = `https://data-api.binance.vision/api/v3/ticker/24hr?symbol=${SYMBOL}`;
-        const REFRESH_RATE = 2000; // 2秒刷新一次
-        // ---------------
+        // --- API Endpoints ---
+        const API_BINANCE = 'https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT';
+        const API_MEMPOOL_TIP = 'https://mempool.space/api/blocks/tip/height';
+        const API_MEMPOOL_FEES = 'https://mempool.space/api/v1/fees/recommended';
+        const API_MEMPOOL_BLOCKS = 'https://mempool.space/api/v1/blocks'; // 获取最新区块列表
+        // 注意：API_FNG 已经被移除
 
-        const priceEl = document.getElementById('price');
-        const percentEl = document.getElementById('percent');
-        const clockEl = document.getElementById('clock');
-        const statusEl = document.getElementById('status');
-        
-        let prevPrice = 0;
-        let failCount = 0;
+        // --- Data Variables ---
+        let lastBlockTime = Date.now(); 
+        const HALVING_INTERVAL = 210000;
+        // 2024年4月已完成第4次减半(840,000)，下一次是 1,050,000
+        const NEXT_HALVING_BLOCK = 1050000; 
 
-        // 获取数据的异步函数
-        async function fetchData() {
+        // --- DOM Elements ---
+        const els = {
+            price: document.getElementById('price'),
+            percent: document.getElementById('percent'),
+            high: document.getElementById('high-price'),
+            low: document.getElementById('low-price'),
+            sats: document.getElementById('sats-per-dollar'),
+            height: document.getElementById('block-height'),
+            gas: document.getElementById('gas-fee'),
+            lastBlock: document.getElementById('last-block-time'),
+            halvingDate: document.getElementById('halving-date'),
+            blocksLeft: document.getElementById('blocks-left'),
+            progress: document.getElementById('block-progress'),
+            clock: document.getElementById('clock')
+            // 注意：与 FNG 相关的元素引用已被移除
+        };
+
+        // 1. 获取价格 (每2秒)
+        async function fetchPrice() {
             try {
-                const res = await fetch(API_URL);
-                if (!res.ok) throw new Error("API Error");
-                
+                const res = await fetch(API_BINANCE);
                 const data = await res.json();
                 
-                // 处理数据
-                const currentPrice = parseFloat(data.lastPrice).toFixed(2); // 保留2位小数
-                const priceChange = parseFloat(data.priceChangePercent).toFixed(2);
+                const price = parseFloat(data.lastPrice);
+                const change = parseFloat(data.priceChangePercent);
                 
-                // 1. 更新价格 & 颜色逻辑
-                priceEl.innerText = currentPrice;
-                priceEl.classList.remove('blink'); // 移除加载动画
-
-                // 颜色判断：比上次高变绿，比上次低变红
-                if (prevPrice > 0) {
-                    if (currentPrice > prevPrice) {
-                        priceEl.className = 'up';
-                    } else if (currentPrice < prevPrice) {
-                        priceEl.className = 'down';
-                    }
-                } else {
-                    // 第一次加载，根据当天涨跌幅定色
-                    priceEl.className = priceChange >= 0 ? 'up' : 'down';
-                }
+                // Price Update
+                els.price.innerText = price.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                els.price.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
                 
-                prevPrice = currentPrice;
+                // Stats
+                els.percent.innerText = (change > 0 ? '+' : '') + change.toFixed(2) + '%';
+                els.percent.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+                els.high.innerText = parseFloat(data.highPrice).toLocaleString('en-US', {maximumFractionDigits:0});
+                els.low.innerText = parseFloat(data.lowPrice).toLocaleString('en-US', {maximumFractionDigits:0});
 
-                // 2. 更新涨跌幅
-                percentEl.innerText = (priceChange > 0 ? '+' : '') + priceChange + '%';
-                percentEl.className = priceChange >= 0 ? 'up' : 'down';
-                // 给涨跌幅加个微弱的背景色以便区分
-                percentEl.style.backgroundColor = priceChange >= 0 ? 'rgba(14, 203, 129, 0.1)' : 'rgba(246, 70, 93, 0.1)';
+                // Sats per Dollar
+                const sats = Math.floor(100000000 / price);
+                els.sats.innerText = `1 USD = ${sats} Sats`;
 
-                // 重置错误计数
-                failCount = 0;
-                statusEl.innerText = "• Live Data2.0";
-                statusEl.style.color = "#333";
+            } catch(e) { console.error('Price API Error', e); }
+        }
 
-            } catch (err) {
-                console.error(err);
-                failCount++;
-                // 如果连续失败超过3次，显示警告
-                if(failCount > 3) {
-                    statusEl.innerText = "Reconnecting...";
-                    statusEl.style.color = "#f6465d";
-                    priceEl.classList.add('blink'); // 价格开始闪烁表示旧数据
+        // 2. 获取链上数据 (每15秒，Mempool API有限制不要太快)
+        async function fetchChainData() {
+            try {
+                // Height
+                const resHeight = await fetch(API_MEMPOOL_TIP);
+                const height = await resHeight.text(); // text format
+                const currentHeight = parseInt(height);
+                els.height.innerText = currentHeight.toLocaleString();
+
+                // Fees
+                const resFees = await fetch(API_MEMPOOL_FEES);
+                const fees = await resFees.json();
+                const fastFee = fees.fastestFee;
+                els.gas.innerText = fastFee;
+                // 颜色逻辑：<20 绿色, 20-50 橙色, >50 红色
+                els.gas.className = 'big-data ' + (fastFee < 20 ? 'gas-low' : (fastFee < 50 ? 'gas-med' : 'gas-high'));
+
+                // Block Time (获取最近出的块的时间戳)
+                const resBlocks = await fetch(API_MEMPOOL_BLOCKS);
+                const blocks = await resBlocks.json();
+                if(blocks && blocks.length > 0) {
+                    lastBlockTime = blocks[0].timestamp * 1000;
                 }
+
+                // Halving Calc
+                const blocksRemaining = NEXT_HALVING_BLOCK - currentHeight;
+                els.blocksLeft.innerText = blocksRemaining.toLocaleString();
+                
+                // 估算日期 (10分钟一个块)
+                const minsRemaining = blocksRemaining * 10;
+                const date = new Date(Date.now() + minsRemaining * 60000);
+                els.halvingDate.innerText = `${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}`;
+
+            } catch(e) { console.error('Mempool API Error', e); }
+        }
+
+        // 注意：fetchFNG 函数已被移除
+
+        // 3. 本地定时器 (每秒刷新：时钟、出块计时条)
+        function updateTickers() {
+            const now = Date.now();
+            
+            // 时钟
+            els.clock.innerText = new Date().toLocaleTimeString('en-US', {hour12:false});
+
+            // 上个区块过去的时间
+            const diffSeconds = Math.floor((now - lastBlockTime) / 1000);
+            const minutes = Math.floor(diffSeconds / 60);
+            const seconds = diffSeconds % 60;
+            els.lastBlock.innerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            // 进度条 (以10分钟/600秒为基准)
+            // 0-10分钟：绿色， >10分钟：变成红色警告
+            let pct = (diffSeconds / 600) * 100;
+            if (pct > 100) pct = 100;
+            
+            els.progress.style.width = pct + '%';
+            if (diffSeconds > 600) {
+                // 超过10分钟没出块，变红
+                els.progress.style.background = 'var(--red)';
+                els.lastBlock.style.color = 'var(--red)';
+            } else {
+                els.progress.style.background = 'var(--green)';
+                els.lastBlock.style.color = 'var(--text-main)';
             }
         }
 
-        // 时钟更新
-        function updateTime() {
-            const now = new Date();
-            // 显示 HH:MM:SS
-            clockEl.innerText = now.toLocaleTimeString('en-US', { hour12: false });
-        }
+        // Init
+        fetchPrice();
+        fetchChainData();
+        // fetchFNG() 已移除
 
-        // --- 启动 ---
-        fetchData(); // 立即执行一次
-        setInterval(fetchData, REFRESH_RATE); // 开启价格轮询
-        setInterval(updateTime, 1000); // 开启时钟轮询
+        setInterval(fetchPrice, 2000); // 2秒刷价格
+        setInterval(fetchChainData, 15000); // 15秒刷链上
+        // setInterval(fetchFNG, 3600000); 已移除
+        setInterval(updateTickers, 1000); // 1秒刷本地动画
 
-        // 页面可见性处理：当页面重新回到前台时，立即刷新一次
-        document.addEventListener("visibilitychange", () => {
-            if (!document.hidden) {
-                fetchData();
-            }
-        });
     </script>
 </body>
 </html>
