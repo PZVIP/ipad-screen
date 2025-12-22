@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iPad Dashboard</title>
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* 禁止滚动 */
+        }
+        #pair {
+            font-size: 3rem;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        #price {
+            font-size: 12rem; /* 超大字体 */
+            font-weight: bold;
+            font-variant-numeric: tabular-nums; /* 防止数字跳动导致宽度变化 */
+        }
+        #percent {
+            font-size: 4rem;
+            margin-top: 20px;
+        }
+        .up { color: #0ecb81; } /* 涨-绿色 */
+        .down { color: #f6465d; } /* 跌-红色 */
+        
+        /* 简单的底栏时间 */
+        #clock {
+            position: absolute;
+            bottom: 30px;
+            font-size: 1.5rem;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="pair">BTC / USDT</div>
+    <div id="price">Loading...</div>
+    <div id="percent">--%</div>
+    <div id="clock">00:00:00</div>
+
+    <script>
+        // 1. WebSocket 连接币安 (复用你 ESP32 的经验)
+        const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+        
+        const priceEl = document.getElementById('price');
+        const percentEl = document.getElementById('percent');
+        const clockEl = document.getElementById('clock');
+        let prevPrice = 0;
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const price = parseFloat(data.c).toFixed(2); // 最新价
+            const percent = parseFloat(data.P).toFixed(2); // 24h 涨跌幅
+
+            // 更新价格
+            priceEl.innerText = price;
+            
+            // 颜色判断
+            if (price > prevPrice) {
+                priceEl.className = 'up';
+            } else if (price < prevPrice) {
+                priceEl.className = 'down';
+            }
+            prevPrice = price;
+
+            // 更新涨跌幅
+            percentEl.innerText = (percent > 0 ? '+' : '') + percent + '%';
+            percentEl.className = percent > 0 ? 'up' : 'down';
+        };
+
+        // 2. 更新底部时间
+        setInterval(() => {
+            const now = new Date();
+            clockEl.innerText = now.toLocaleTimeString();
+        }, 1000);
+
+        // 防止 iPad 休眠导致 socket 断开，加一个简单的重连机制
+        ws.onclose = () => {
+            setTimeout(() => {
+                location.reload();
+            }, 5000);
+        };
+    </script>
+</body>
+</html>
