@@ -226,7 +226,7 @@
         
         <div class="data-grid">
             <div class="mini-card">
-                <div class="label">Block Height</div>
+                <div class="label">Block Height2.0</div>
                 <div class="big-num" id="block-height">---</div>
             </div>
 
@@ -394,6 +394,33 @@
             if (!document.hidden) { fetchPrices(); fetchChain(); }
         });
 
+    </script>
+    <script>
+        function setDailyRefresh() {
+            const now = new Date();
+            // Target time: 8:05 AM UTC+8
+            const targetHour = 8;
+            const targetMinute = 5;
+
+            // Create a Date object for today's target time
+            let targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHour, targetMinute, 0, 0);
+
+            // If current time is past today's target time, set target for tomorrow
+            if (now.getTime() > targetTime.getTime()) {
+                targetTime.setDate(targetTime.getDate() + 1);
+            }
+
+            const delay = targetTime.getTime() - now.getTime();
+
+            console.log(`Page will refresh in ${delay / 1000 / 60} minutes at ${targetTime.toLocaleString()}`);
+
+            setTimeout(() => {
+                location.reload();
+            }, delay);
+        }
+
+        // Set the daily refresh when the page loads
+        setDailyRefresh();
     </script>
 </body>
 </html>
