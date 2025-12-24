@@ -1,95 +1,106 @@
 // ==========================================
-// ☁️ 云端核心：BTC vs Gold 翻转进度条 (修复版 v1.1)
-// 修复：更换更稳定的 CoinCap API，增加防崩溃兜底
+// ☁️ 云端核心：BTC vs Gold 翻转进度条 (Binance版)
+// 数据源：data-api.binance.vision
 // ==========================================
 
 module.exports.createWidget = async () => {
   const widget = new ListWidget();
 
-  // --- 1. 配置与数据源 ---
-  // 黄金总市值 (单位：万亿美元)
-  const GOLD_MARKET_CAP_TRILLION = 17.5; 
-  const GOLD_CAP_VALUE = GOLD_MARKET_CAP_TRILLION * 1000000000000;
+  // --- 1. 定义常量 (Supply) ---
+  // 黄金总储量：约 67.2 亿盎司 (20.9万吨)
+  const GOLD_SUPPLY_OZ = 6720000000; 
+  // BTC 流通量：约 1980 万枚 (暂用固定值以保证速度)
+  const BTC_SUPPLY = 19800000;
 
-  // 获取 BTC 详细数据 (价格、市值、流通量)
-  // 这里加了 await 确保数据回来再继续
-  const data = await getBTCData();
+  // --- 2. 并行获取实时价格 (Binance API) ---
+  // 使用 Promise.all 同时请求，速度翻倍
+  const prices = await getBinancePrices();
   
-  // 核心计算
-  const currentPrice = data.price;
-  const btcMarketCap = data.market_cap;
-  const circulatingSupply = data.circulating_supply; 
-  
-  // 进度百分比
-  const progressPercent = (btcMarketCap / GOLD_CAP_VALUE); 
-  // 目标价格
-  const targetPrice = GOLD_CAP_VALUE / circulatingSupply;
+  const btcPrice = prices.btc;   // BTC 实时价格
+  const goldPriceOz = prices.gold; // 黄金实时盎司价 (PAXG)
+
+  // --- 3. 核心计算 ---
+  // 实时市值计算
+  const btcMarketCap = btcPrice * BTC_SUPPLY;
+  const goldMarketCap = goldPriceOz * GOLD_SUPPLY_OZ;
+
+  // 进度与目标
+  const progressPercent = (btcMarketCap / goldMarketCap); 
+  // 目标单价 = 黄金当前总市值 / BTC流通量
+  const targetPrice = goldMarketCap / BTC_SUPPLY;
 
 
-  // --- 2. UI 风格设置 ---
+  // --- 4. UI 风格绘制 ---
+  // 背景：采用 Binance 风格的黑金配色
   let gradient = new LinearGradient();
-  gradient.colors = [new Color("#141414"), new Color("#1E1E1E")];
+  gradient.colors = [new Color("#1E2026"), new Color("#0B0E11")];
   gradient.locations = [0, 1];
   widget.backgroundGradient = gradient;
   
   widget.setPadding(16, 16, 16, 16);
 
-
-  // --- 3. 顶部：当前价格 ---
+  // >> Top: 标题与实时价格
   let headerStack = widget.addStack();
   headerStack.layoutHorizontally();
   headerStack.centerAlignContent();
   
-  // 左侧标题
   let titleStack = headerStack.addStack();
   titleStack.layoutVertically();
-  let title = titleStack.addText("BITCOIN PRICE");
-  title.font = Font.systemFont(10);
-  title.textColor = new Color("#888888");
   
-  let priceText = titleStack.addText("$" + formatNumber(currentPrice));
+  let title = titleStack.addText("BTC PRICE");
+  title.font = Font.systemFont(9);
+  title.textColor = new Color("#848E9C"); // 交易所灰
+  
+  let priceText = titleStack.addText("$" + formatNumber(btcPrice));
   priceText.font = Font.heavySystemFont(22);
-  priceText.textColor = Color.white();
+  priceText.textColor = new Color("#0ECB81"); // 交易所涨幅绿
   
   headerStack.addSpacer();
   
-  // 右侧进度
+  // 右侧进度百分比
   let percentStack = headerStack.addStack();
   let percentText = percentStack.addText((progressPercent * 100).toFixed(2) + "%");
-  percentText.font = Font.boldSystemFont(16);
-  percentText.textColor = new Color("#F7931A"); 
+  percentText.font = Font.monospacedSystemFont(16); // 等宽字体更有数字感
+  percentText.textColor = new Color("#F0B90B"); // Binance Yellow
 
   widget.addSpacer(12);
 
-
-  // --- 4. 中部：可视化进度条 ---
-  // 使用图片绘制法，兼容性最好
+  // >> Middle: 黄金进度条
+  // 底槽
+  let barStack = widget.addStack();
+  barStack.size = new Size(0, 8);
+  barStack.backgroundColor = new Color("#2B3139");
+  barStack.cornerRadius = 4;
+  barStack.layoutHorizontally();
+  
+  // 进度条绘制 (使用 drawBar 函数)
   let barImage = drawProgressBar(progressPercent);
   let imgStack = widget.addStack();
   let img = imgStack.addImage(barImage);
-  img.imageSize = new Size(300, 10); 
+  img.imageSize = new Size(300, 10);
   img.cornerRadius = 5;
 
   widget.addSpacer(15);
 
-
-  // --- 5. 底部：数据三列布局 ---
+  // >> Bottom: 三列核心数据
   let statsStack = widget.addStack();
   statsStack.layoutHorizontally();
 
-  // 列 1: BTC 市值
+  // 列1: BTC 市值
   addStatColumn(statsStack, "BTC市值", "$" + formatTrillion(btcMarketCap), Color.white());
   statsStack.addSpacer();
   
-  // 列 2: 黄金市值
-  addStatColumn(statsStack, "黄金市值", "$" + GOLD_MARKET_CAP_TRILLION + "T", new Color("#FFD700"));
+  // 列2: 黄金市值 (动态)
+  // 颜色使用黄金色
+  addStatColumn(statsStack, "黄金市值", "$" + formatTrillion(goldMarketCap), new Color("#FFD700"));
   statsStack.addSpacer();
   
-  // 列 3: 目标单价
-  addStatColumn(statsStack, "目标单价", "$" + formatK(targetPrice), new Color("#F7931A"));
+  // 列3: 目标单价
+  addStatColumn(statsStack, "目标单价", "$" + formatK(targetPrice), new Color("#F0B90B"));
 
-  // --- 6. 刷新逻辑 ---
-  widget.refreshAfterDate = new Date(Date.now() + 1000 * 60 * 60); // 1小时刷新
+  // --- 5. 刷新逻辑 ---
+  // 建议 15 分钟刷新 (Binance API 限制很宽松，可以快一点)
+  widget.refreshAfterDate = new Date(Date.now() + 1000 * 60 * 15);
   
   return widget;
 };
@@ -98,61 +109,52 @@ module.exports.createWidget = async () => {
 // 🛠 辅助函数库
 // =======================
 
-// 修复后的数据获取函数 (使用 CoinCap API)
-async function getBTCData() {
-  const url = "https://api.coincap.io/v2/assets/bitcoin";
-  
+// 从 Binance 获取数据
+async function getBinancePrices() {
+  const btcUrl = "https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT";
+  const goldUrl = "https://data-api.binance.vision/api/v3/ticker/price?symbol=PAXGUSDT";
+
   try {
-    let req = new Request(url);
-    // 设置超时防止卡死
-    req.timeoutInterval = 10; 
-    let json = await req.loadJSON();
+    // 并行请求，速度更快
+    let req1 = new Request(btcUrl);
+    let req2 = new Request(goldUrl);
     
-    // CoinCap 返回的数据在 json.data 里，且是字符串，需要转数字
-    let d = json.data;
-    
-    if (!d) throw new Error("API Data Empty");
+    // 同时等待两个结果
+    let [res1, res2] = await Promise.all([req1.loadJSON(), req2.loadJSON()]);
 
     return {
-      price: parseFloat(d.priceUsd),
-      market_cap: parseFloat(d.marketCapUsd),
-      circulating_supply: parseFloat(d.supply)
+      btc: parseFloat(res1.price),
+      gold: parseFloat(res2.price)
     };
   } catch (e) {
-    // 🚨 兜底数据：如果API挂了，使用这个数据，防止组件报错白屏
-    // 这里填入一个近期的估算值
-    return { 
-      price: 98000, 
-      market_cap: 1950000000000, 
-      circulating_supply: 19800000 
-    };
+    // 兜底数据 (防止断网白屏)
+    return { btc: 98000, gold: 2600 };
   }
 }
 
 function drawProgressBar(pct) {
-  const width = 600; 
-  const height = 20; 
+  const width = 600;
+  const height = 20;
   const ctx = new DrawContext();
   ctx.size = new Size(width, height);
   ctx.opaque = false;
   
-  // 底槽
+  // 轨道
   let trackPath = new Path();
   trackPath.addRoundedRect(new Rect(0, 0, width, height), height/2, height/2);
   ctx.addPath(trackPath);
-  ctx.setFillColor(new Color("#333333"));
+  ctx.setFillColor(new Color("#2B3139"));
   ctx.fillPath();
   
   // 进度
-  // 限制最大100%，防止溢出画坏了
   let safePct = pct > 1 ? 1 : pct;
   let barWidth = width * safePct;
-  if (barWidth < height) barWidth = height; 
+  if (barWidth < height) barWidth = height;
   
   let barPath = new Path();
   barPath.addRoundedRect(new Rect(0, 0, barWidth, height), height/2, height/2);
   ctx.addPath(barPath);
-  ctx.setFillColor(new Color("#F7931A"));
+  ctx.setFillColor(new Color("#F0B90B")); // Binance Yellow
   ctx.fillPath();
   
   return ctx.getImage();
@@ -164,7 +166,7 @@ function addStatColumn(stack, titleText, valueText, color) {
   
   let t = col.addText(titleText);
   t.font = Font.systemFont(8);
-  t.textColor = new Color("#888888");
+  t.textColor = new Color("#848E9C");
   
   let v = col.addText(valueText);
   v.font = Font.boldSystemFont(11);
