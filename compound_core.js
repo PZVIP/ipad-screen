@@ -1,106 +1,71 @@
 // ==========================================
-// ☁️ 云端核心代码 (Compound Core)
-// 文件名: compound_core.js
+// ☁️ 云端核心代码：定投哲学铭牌
+// 风格：极简黑金 / 赛博斯多葛
 // ==========================================
 
-module.exports.createWidget = async (userBTC) => {
-  // 1. 默认配置与参数处理
-  // 如果用户没填参数，默认显示 1 BTC
-  const MY_BTC_AMOUNT = parseFloat(userBTC) || 1.0; 
-  const CURRENCY = "cny"; // cny 或 usd
-  const ANCHOR_ITEM = "tesla"; // tesla, coffee, house
-
-  // 2. 数据源定义
-  const API_URL = `https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=${CURRENCY}`;
-  const PRICES = {
-    "cny": { "tesla": 250000, "coffee": 30, "house": 1000000 },
-    "usd": { "tesla": 35000, "coffee": 5, "house": 150000 }
-  };
-  const LABELS = {
-    "tesla": { emoji: "🚘", name: "Model 3" },
-    "coffee": { emoji: "☕", name: "星巴克" },
-    "house": { emoji: "🏠", name: "房产首付" }
-  };
-
-  // 3. 创建组件 UI
+module.exports.createWidget = async () => {
   const widget = new ListWidget();
-  
-  // 背景：深邃黑金渐变
+
+  // --- 1. 背景样式设计 ---
+  // 采用深邃的黑灰渐变，营造高端感和沉浸感
   let gradient = new LinearGradient();
-  gradient.colors = [new Color("#1a1a1a"), new Color("#2a2a2a")];
-  gradient.locations = [0, 1];
+  // 上半部分是深炭灰，下半部分是纯黑
+  gradient.colors = [new Color("#1c1c1e"), new Color("#000000")];
+  gradient.locations = [0, 0.8];
   widget.backgroundGradient = gradient;
 
-  // 获取价格
-  let btcPrice = await getBTCPrice(API_URL, CURRENCY);
-  let totalValue = btcPrice * MY_BTC_AMOUNT;
-  
-  // 计算购买力
-  let itemPrice = PRICES[CURRENCY][ANCHOR_ITEM];
-  let powerCount = (totalValue / itemPrice).toFixed(1); 
-  let itemInfo = LABELS[ANCHOR_ITEM];
+  // 设置整体边距，让文字呼吸
+  widget.setPadding(20, 20, 20, 20);
 
-  // 获取排名文案
-  let rankInfo = getRank(MY_BTC_AMOUNT);
 
-  // --- 绘制 UI ---
-  
-  // Header
+  // --- 2. 顶部视觉锚点 (Header) ---
   let headerStack = widget.addStack();
-  let logoText = headerStack.addText("₿ 复利人生"); // 这里你可以随时远程改名
-  logoText.font = Font.boldSystemFont(10);
-  logoText.textColor = new Color("#F7931A");
+  headerStack.centerAlignContent();
+
+  // 一个比特币橙色的小圆点，作为视觉引导
+  let dotIcon = headerStack.addText("●");
+  dotIcon.font = Font.blackSystemFont(8); // 特粗字体
+  dotIcon.textColor = new Color("#F7931A"); // 比特币标志性橙色
+
+  headerStack.addSpacer(5);
+
+  // 小标题，定义这个组件的属性
+  let titleText = headerStack.addText("定投哲学");
+  titleText.font = Font.systemFont(10);
+  titleText.textColor = new Color("#8e8e93"); // 苹果风格的次级灰色
+  titleText.textOpacity = 0.8;
+
+  // 增加 header 和正文之间的距离
+  widget.addSpacer(15);
+
+
+  // --- 3. 核心正文 (Main Content) ---
+  // 你的那句金句
+  const mainSentence = "定投是长期持有的唯一有效改良。";
+
+  let bodyText = widget.addText(mainSentence);
   
-  widget.addSpacer(6);
+  // 字体设计：大、粗、居中
+  // 使用系统自带的衬线字体(Serif)或圆体(Rounded)可能会更有哲学味，
+  // 但为了稳妥和力量感，这里选用 Bold System Font。
+  bodyText.font = Font.boldSystemFont(18); 
+  bodyText.textColor = Color.white(); // 纯白文字，最高对比度
+  bodyText.centerAlignText(); // 居中对齐，庄重感
 
-  // Amount
-  let amountText = widget.addText(MY_BTC_AMOUNT.toString() + " BTC");
-  amountText.font = Font.heavySystemFont(22);
-  amountText.textColor = Color.white();
-  
-  widget.addSpacer(4);
+  // 允许文字在小尺寸组件下稍微缩小一点点以适应屏幕
+  bodyText.minimumScaleFactor = 0.9;
 
-  // Power
-  let powerStack = widget.addStack();
-  powerStack.centerAlignContent();
-  let emojiText = powerStack.addText(itemInfo.emoji + " ");
-  emojiText.font = Font.systemFont(12);
-  let valText = powerStack.addText("≈ " + powerCount + " " + itemInfo.name);
-  valText.font = Font.mediumSystemFont(12);
-  valText.textColor = new Color("#aaaaaa");
 
-  widget.addSpacer(6);
+  // --- 4. 底部装饰 (Optional Footnote) ---
+  // 加一个微妙的底部，平衡视觉（可选）
+  widget.addSpacer(); // 自动把上面的内容顶上去，把下面的顶下来
+  let footerStack = widget.addStack();
+  footerStack.addSpacer(); // 居中
+  let footerText = footerStack.addText("₿ COMPOUND LIFE");
+  footerText.font = Font.heavySystemFont(8);
+  footerText.textColor = new Color("#333333"); // 极深的灰色，几乎隐形，增加层次感
+  footerStack.addSpacer();
 
-  // Rank
-  let rankText = widget.addText(rankInfo);
-  rankText.font = Font.boldSystemFont(10);
-  rankText.textColor = MY_BTC_AMOUNT >= 1 ? new Color("#FFD700") : new Color("#20B2AA");
-  
-  // 底部公告栏 (这是你的远程扩音器！)
-  // 你可以在云端随时加一行字，所有用户都会看到
-  // widget.addSpacer(4);
-  // let notice = widget.addText("🔔 今晚8点社群直播");
-  // notice.font = Font.systemFont(8);
-  // notice.textColor = Color.red();
 
   return widget;
 };
-
-// 辅助函数：获取价格
-async function getBTCPrice(url, currency) {
-  try {
-    let req = new Request(url);
-    let json = await req.loadJSON();
-    return json.bitcoin[currency];
-  } catch (e) {
-    return 0; // 离线处理
-  }
-}
-
-// 辅助函数：计算排名
-function getRank(amount) {
-  if (amount >= 10) return "🐋 巨鲸：全球前 0.001%";
-  if (amount >= 1) return "🏆 2100万俱乐部成员";
-  if (amount >= 0.1) return "🥈 超过全球 97% 的人";
-  return "🌱 正在改变命运的路上";
-}
