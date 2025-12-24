@@ -1,5 +1,5 @@
 // ==========================================
-// ☁️ 云端核心：BTC vs Gold 翻转进度条 (修复版 v1.2)
+// ☁️ 云端核心：BTC vs Gold 翻转进度条 (最终修复版 v1.3)
 // 修复：字体兼容性报错，确保所有 iOS 版本可用
 // ==========================================
 
@@ -52,7 +52,7 @@ module.exports.createWidget = async () => {
   
   headerStack.addSpacer();
   
-  // >> 右侧进度百分比 (修复点在这里)
+  // >> 右侧进度百分比
   let percentStack = headerStack.addStack();
   let percentText = percentStack.addText((progressPercent * 100).toFixed(2) + "%");
   
@@ -103,13 +103,16 @@ module.exports.createWidget = async () => {
 // =======================
 
 async function getBinancePrices() {
-  // 备用方案：如果币安官方API被墙，这里预留了位置可以换其他API
   const btcUrl = "https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT";
   const goldUrl = "https://data-api.binance.vision/api/v3/ticker/price?symbol=PAXGUSDT";
 
   try {
     let req1 = new Request(btcUrl);
     let req2 = new Request(goldUrl);
+    
+    // 超时控制，防止卡死
+    req1.timeoutInterval = 10;
+    req2.timeoutInterval = 10;
     
     let [res1, res2] = await Promise.all([req1.loadJSON(), req2.loadJSON()]);
 
