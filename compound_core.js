@@ -1,6 +1,6 @@
 // ==========================================
-// ☁️ 云端核心：BTC vs Gold 最终愿景版 (v3.3)
-// UI更新：底部增加 "比特币=黄金" 连接符
+// ☁️ 云端核心：BTC vs Gold 最终愿景版 (v3.4)
+// UI优化：增强进度条对比度，清晰展示"已完成"vs"未完成"
 // ==========================================
 
 module.exports.createWidget = async () => {
@@ -104,7 +104,7 @@ module.exports.createWidget = async () => {
 
 
   // ===========================================
-  // 底部：市值对比 (修改点在此)
+  // 底部：市值对比
   // ===========================================
   let statsStack = widget.addStack();
   statsStack.layoutHorizontally();
@@ -115,16 +115,15 @@ module.exports.createWidget = async () => {
   
   statsStack.addSpacer();
   
-  // 中间：连接符 (新增)
+  // 中间：连接符
   let midStack = statsStack.addStack();
   let midText = midStack.addText("比特币 = 黄金");
-  midText.font = Font.boldSystemFont(12); // 小而精致的字体
-  midText.textColor = new Color("#00cc7b"); // 深灰色，作为低调的背景连接
+  midText.font = Font.boldSystemFont(12); 
+  midText.textColor = new Color("#00cc7b"); 
   
   statsStack.addSpacer();
   
   // 列2: 黄金市值
-  // 为了右对齐美观，这里稍微处理一下
   addStatColumn(statsStack, "GOLD MARKET CAP", "$" + formatTrillion(goldMarketCap), new Color("#FFD700"), true);
 
   // 刷新逻辑
@@ -140,21 +139,22 @@ module.exports.createWidget = async () => {
 function drawProgressBarWithIcon(pct, isDayTime) {
   const width = 600; 
   const height = 46; 
-  const barHeight = 8;
+  const barHeight = 10; // 稍微加粗一点点，更清晰
   const ctx = new DrawContext();
   ctx.size = new Size(width, height);
   ctx.opaque = false;
   
   const yBarOffset = height - barHeight - 2; 
   
-  // 底槽
+  // 1. 底槽 (Unachieved part) - 颜色修改点
   let trackPath = new Path();
   trackPath.addRoundedRect(new Rect(0, yBarOffset, width, barHeight), barHeight/2, barHeight/2);
   ctx.addPath(trackPath);
-  ctx.setFillColor(new Color("#1A1A1A"));
+  // 使用显眼但和谐的深灰蓝色，确保在黑色背景上清晰可见
+  ctx.setFillColor(new Color("#363A45")); 
   ctx.fillPath();
   
-  // 进度
+  // 2. 进度 (Achieved part)
   let safePct = pct > 1 ? 1 : pct;
   let barWidth = Math.max(width * safePct, barHeight + 10);
   
@@ -164,7 +164,7 @@ function drawProgressBarWithIcon(pct, isDayTime) {
   ctx.setFillColor(new Color("#FFD700")); 
   ctx.fillPath();
   
-  // 图标
+  // 3. 图标
   const emoji = isDayTime ? "🚀" : "🛌";
   const emojiSize = 26; 
   
@@ -188,9 +188,6 @@ async function getBinancePrices() {
   } catch (e) { return { btc: 98000, gold: 2600 }; }
 }
 
-// 增加了一个 alignRight 参数，但为了保持 statsStack 默认左对齐逻辑，
-// 我们主要通过 addStatColumn 内部来控制，或者通过外层 spacer 控制。
-// 这里保持原样即可，因为左右都有 Spacer 挤压。
 function addStatColumn(stack, titleText, valueText, color, isRight) {
   let col = stack.addStack();
   col.layoutVertically();
@@ -198,12 +195,10 @@ function addStatColumn(stack, titleText, valueText, color, isRight) {
   let t = col.addText(titleText);
   t.font = Font.systemFont(8);
   t.textColor = new Color("#848E9C");
-  // if(isRight) t.rightAlignText(); // 可选：让右边那列文字右对齐
   
   let v = col.addText(valueText);
   v.font = Font.boldSystemFont(11);
   v.textColor = color;
-  // if(isRight) v.rightAlignText();
 }
 
 function formatNumber(num) { return num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
