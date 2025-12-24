@@ -118,8 +118,8 @@ module.exports.createWidget = async () => {
   // 中间：连接符 (新增)
   let midStack = statsStack.addStack();
   let midText = midStack.addText("比特币 = 黄金");
-  midText.font = Font.boldSystemFont(10); // 小而精致的字体
-  midText.textColor = new Color("#444444"); // 深灰色，作为低调的背景连接
+  midText.font = Font.boldSystemFont(12); // 小而精致的字体
+  midText.textColor = new Color("#00cc7b"); // 深灰色，作为低调的背景连接
   
   statsStack.addSpacer();
   
