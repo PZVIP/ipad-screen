@@ -1,6 +1,6 @@
 // ==========================================
-// ☁️ 云端核心：BTC vs Gold 最终愿景版 (v3.5)
-// UI更新：进度条居中，增加 0% 和 100% 刻度
+// ☁️ 云端核心：BTC vs Gold 最终愿景版 (v3.6)
+// UI更新：价格格式改为 "x.xx w" (保留3位有效数字)
 // ==========================================
 
 module.exports.createWidget = async () => {
@@ -21,7 +21,6 @@ module.exports.createWidget = async () => {
   const upsideMultiplier = (goldMarketCap / btcMarketCap) - 1;
   const targetPrice = goldMarketCap / BTC_SUPPLY;
 
-  // 昼夜判断
   const date = new Date();
   const hour = date.getHours();
   const isDayTime = hour >= 7 && hour < 23;
@@ -35,7 +34,7 @@ module.exports.createWidget = async () => {
   widget.setPadding(16, 16, 16, 16);
 
   // ===========================================
-  // Top：价格信息
+  // Top：价格信息 (修改点：格式化)
   // ===========================================
   let headerStack = widget.addStack();
   headerStack.layoutHorizontally();
@@ -46,7 +45,9 @@ module.exports.createWidget = async () => {
   let titleLeft = leftStack.addText("CURRENT PRICE");
   titleLeft.font = Font.systemFont(9);
   titleLeft.textColor = new Color("#848E9C"); 
-  let priceLeft = leftStack.addText("$" + formatNumber(btcPrice));
+  
+  // 🔴 修改：使用 formatW
+  let priceLeft = leftStack.addText("$" + formatW(btcPrice));
   priceLeft.font = Font.heavySystemFont(22);
   priceLeft.textColor = new Color("#0ECB81"); 
   
@@ -58,7 +59,9 @@ module.exports.createWidget = async () => {
   let titleRight = rightStack.addText("TARGET PRICE");
   titleRight.font = Font.systemFont(9);
   titleRight.textColor = new Color("#848E9C");
-  let priceRight = rightStack.addText("$" + formatK(targetPrice));
+  
+  // 🔴 修改：使用 formatW
+  let priceRight = rightStack.addText("$" + formatW(targetPrice));
   priceRight.font = Font.heavySystemFont(22);
   priceRight.textColor = new Color("#F0B90B"); 
 
@@ -66,10 +69,8 @@ module.exports.createWidget = async () => {
 
 
   // ===========================================
-  // Middle：进度条区域 (重构布局)
+  // Middle：进度条区域 (保持居中布局)
   // ===========================================
-  
-  // 1. 进度文字
   let percentLabelStack = widget.addStack();
   percentLabelStack.centerAlignContent();
   percentLabelStack.addSpacer();
@@ -86,37 +87,30 @@ module.exports.createWidget = async () => {
 
   widget.addSpacer(5);
 
-  // 2. 进度条容器 [0% -- BAR -- 100%]
+  // 进度条容器
   let barRowStack = widget.addStack();
   barRowStack.layoutHorizontally();
-  barRowStack.centerAlignContent(); // 垂直居中对齐
-  
-  // 增加弹性Spacer，确保整体居中
+  barRowStack.centerAlignContent();
   barRowStack.addSpacer(); 
 
-  // 左刻度: 0%
   let startLabel = barRowStack.addText("0%");
   startLabel.font = Font.systemFont(10);
   startLabel.textColor = new Color("#555555");
   
   barRowStack.addSpacer(8);
 
-  // 进度条图片
   let barImage = drawProgressBarWithIcon(progressPercent, isDayTime);
   let img = barRowStack.addImage(barImage);
-  // 设定固定尺寸，给左右文字留空间
-  // Medium 组件总宽约 330，减去padding(32)和文字空间，给图片约 230
   img.imageSize = new Size(230, 24); 
   img.cornerRadius = 0;
 
   barRowStack.addSpacer(8);
 
-  // 右刻度: 100%
   let endLabel = barRowStack.addText("100%");
   endLabel.font = Font.systemFont(10);
   endLabel.textColor = new Color("#555555");
 
-  barRowStack.addSpacer(); // 右侧弹性Spacer
+  barRowStack.addSpacer(); 
 
   widget.addSpacer(15);
 
@@ -131,14 +125,13 @@ module.exports.createWidget = async () => {
   addStatColumn(statsStack, "BTC MARKET CAP", "$" + formatTrillion(btcMarketCap), Color.white());
   statsStack.addSpacer();
   
-  // 连接符
   let midStack = statsStack.addStack();
   let midText = midStack.addText("比特币 = 黄金");
   midText.font = Font.boldSystemFont(11); 
   midText.textColor = new Color("#00cc7b"); 
   statsStack.addSpacer();
   
-  addStatColumn(statsStack, "GOLD MARKET CAP", "$" + formatTrillion(goldMarketCap), new Color("#FFD700"));
+  addStatColumn(statsStack, "GOLD MARKET CAP", "$" + formatTrillion(goldMarketCap), new Color("#FFD700"), true);
 
   widget.refreshAfterDate = new Date(Date.now() + 1000 * 60 * 15);
   
@@ -149,27 +142,33 @@ module.exports.createWidget = async () => {
 // 🛠 辅助函数库
 // =======================
 
+// 🔴 新增：以"万"为单位，保留3位有效数字
+function formatW(num) {
+  // 除以 10000 得到万
+  let wan = num / 10000;
+  // toPrecision(3) 是 JS 自带函数，专门处理有效数字
+  // 例如: 8.712 -> 8.71, 88.56 -> 88.6, 153.4 -> 153
+  // parseFloat 去掉末尾可能出现的无用0 (如 1.00 -> 1)
+  return parseFloat(wan.toPrecision(3)) + "w";
+}
+
 function drawProgressBarWithIcon(pct, isDayTime) {
-  // 画布设大一点，保证缩放后高清
   const width = 600; 
-  const height = 60; // 高度增加，容纳更大的图标
-  const barHeight = 16; // 轨道画粗一点，缩放后才看得清
+  const height = 60; 
+  const barHeight = 16; 
   
   const ctx = new DrawContext();
   ctx.size = new Size(width, height);
   ctx.opaque = false;
   
-  // 计算垂直偏移，让进度条靠下
   const yBarOffset = height - barHeight - 5; 
   
-  // 1. 底槽
   let trackPath = new Path();
   trackPath.addRoundedRect(new Rect(0, yBarOffset, width, barHeight), barHeight/2, barHeight/2);
   ctx.addPath(trackPath);
   ctx.setFillColor(new Color("#363A45")); 
   ctx.fillPath();
   
-  // 2. 进度
   let safePct = pct > 1 ? 1 : pct;
   let barWidth = Math.max(width * safePct, barHeight + 20);
   
@@ -179,17 +178,13 @@ function drawProgressBarWithIcon(pct, isDayTime) {
   ctx.setFillColor(new Color("#FFD700")); 
   ctx.fillPath();
   
-  // 3. 图标 (火箭/床)
   const emoji = isDayTime ? "🚀" : "🛌";
-  const emojiSize = 48; // 字体设大，因为我们在230宽的区域显示600宽的图
+  const emojiSize = 48; 
   
   ctx.setFont(Font.systemFont(emojiSize));
   
-  // 图标位置计算
   let iconX = barWidth - (emojiSize / 1.3); 
-  // 防止图标跑出左边界
   if(iconX < 0) iconX = 0;
-  // 防止图标跑出右边界
   if(iconX > width - emojiSize) iconX = width - emojiSize;
 
   let iconY = yBarOffset - emojiSize + 10; 
@@ -221,6 +216,4 @@ function addStatColumn(stack, titleText, valueText, color) {
   v.textColor = color;
 }
 
-function formatNumber(num) { return num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 function formatTrillion(num) { return (num / 1000000000000).toFixed(2) + "T"; }
-function formatK(num) { return (num / 1000).toFixed(0) + "k"; }
