@@ -83,7 +83,7 @@ module.exports.createWidget = async () => {
   
   let pctStr = (progressPercent * 100).toFixed(2) + "%";
   let multiplierStr = upsideMultiplier.toFixed(2);
-  let infoText = `当前进度：${pctStr}，还可以涨 ${multiplierStr} 倍`;
+  let infoText = `追平黄金当前进度：${pctStr}，距离目标还要涨 ${multiplierStr} 倍`;
   
   let pText = percentLabelStack.addText(infoText);
   pText.font = Font.boldSystemFont(11);
