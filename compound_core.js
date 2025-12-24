@@ -1,71 +1,157 @@
 // ==========================================
-// ☁️ 云端核心代码：定投哲学铭牌
-// 风格：极简黑金 / 赛博斯多葛
+// ☁️ 云端核心：BTC vs Gold 进度条 (Rich UI)
 // ==========================================
 
 module.exports.createWidget = async () => {
   const widget = new ListWidget();
 
-  // --- 1. 背景样式设计 ---
-  // 采用深邃的黑灰渐变，营造高端感和沉浸感
-  let gradient = new LinearGradient();
-  // 上半部分是深炭灰，下半部分是纯黑
-  gradient.colors = [new Color("#1c1c1e"), new Color("#000000")];
-  gradient.locations = [0, 0.8];
-  widget.backgroundGradient = gradient;
-
-  // 设置整体边距，让文字呼吸
-  widget.setPadding(20, 20, 20, 20);
-
-
-  // --- 2. 顶部视觉锚点 (Header) ---
-  let headerStack = widget.addStack();
-  headerStack.centerAlignContent();
-
-  // 一个比特币橙色的小圆点，作为视觉引导
-  let dotIcon = headerStack.addText("●");
-  dotIcon.font = Font.blackSystemFont(8); // 特粗字体
-  dotIcon.textColor = new Color("#F7931A"); // 比特币标志性橙色
-
-  headerStack.addSpacer(5);
-
-  // 小标题，定义这个组件的属性
-  let titleText = headerStack.addText("定投哲学");
-  titleText.font = Font.systemFont(10);
-  titleText.textColor = new Color("#8e8e93"); // 苹果风格的次级灰色
-  titleText.textOpacity = 0.8;
-
-  // 增加 header 和正文之间的距离
-  widget.addSpacer(15);
-
-
-  // --- 3. 核心正文 (Main Content) ---
-  // 你的那句金句
-  const mainSentence = "定投是长期持有的唯一有效改良。";
-
-  let bodyText = widget.addText(mainSentence);
+  // --- 1. 数据配置 ---
+  // 黄金总市值 (约 17.5 万亿美元，作为常量锚点)
+  const GOLD_MARKET_CAP_USD = 17500000000000; 
   
-  // 字体设计：大、粗、居中
-  // 使用系统自带的衬线字体(Serif)或圆体(Rounded)可能会更有哲学味，
-  // 但为了稳妥和力量感，这里选用 Bold System Font。
-  bodyText.font = Font.boldSystemFont(18); 
-  bodyText.textColor = Color.white(); // 纯白文字，最高对比度
-  bodyText.centerAlignText(); // 居中对齐，庄重感
+  // 获取 BTC 数据
+  const data = await getBTCData();
+  const btcCap = data.market_cap.usd;
+  const btcPrice = data.current_price.usd;
 
-  // 允许文字在小尺寸组件下稍微缩小一点点以适应屏幕
-  bodyText.minimumScaleFactor = 0.9;
+  // 计算进度
+  let progress = btcCap / GOLD_MARKET_CAP_USD;
+  // 防止溢出 (虽然还得等很久)
+  if (progress > 1) progress = 1;
+  
+  let percentage = (progress * 100).toFixed(2) + "%";
+  
+  // 计算目标币价 (市值追平黄金时的单价)
+  // 目标价 = 当前价 / 进度
+  let targetPrice = (btcPrice / progress).toLocaleString('en-US', {maximumFractionDigits: 0});
 
 
-  // --- 4. 底部装饰 (Optional Footnote) ---
-  // 加一个微妙的底部，平衡视觉（可选）
-  widget.addSpacer(); // 自动把上面的内容顶上去，把下面的顶下来
-  let footerStack = widget.addStack();
-  footerStack.addSpacer(); // 居中
-  let footerText = footerStack.addText("₿ COMPOUND LIFE");
-  footerText.font = Font.heavySystemFont(8);
-  footerText.textColor = new Color("#333333"); // 极深的灰色，几乎隐形，增加层次感
-  footerStack.addSpacer();
+  // --- 2. 背景设计 ---
+  let gradient = new LinearGradient();
+  gradient.colors = [new Color("#141414"), new Color("#1C1C1E")];
+  gradient.locations = [0, 1];
+  widget.backgroundGradient = gradient;
+  
+  // 设置内边距
+  widget.setPadding(16, 16, 16, 16);
+
+
+  // --- 3. UI 布局 ---
+
+  // [Header] 标题栏
+  let header = widget.addStack();
+  header.centerAlignContent();
+  let title = header.addText("🟡 GOLD PARITY"); // 黄金对标
+  title.font = Font.heavySystemFont(10);
+  title.textColor = new Color("#8E8E93");
+  header.addSpacer();
+  let status = header.addText("TARGET: $" + targetPrice); // 显示目标价
+  status.font = Font.systemFont(10);
+  status.textColor = new Color("#333333"); // 隐约可见，不抢眼
+
+  widget.addSpacer(12);
+
+
+  // [Hero] 核心百分比大字
+  let percentText = widget.addText(percentage);
+  percentText.font = Font.heavySystemFont(32);
+  percentText.textColor = new Color("#FFD700"); // 金色高亮
+  // 给文字加个阴影效果
+  percentText.shadowColor = new Color("#F7931A", 0.3);
+  percentText.shadowRadius = 3;
+  percentText.shadowOffset = new Point(0, 2);
+
+  widget.addSpacer(4);
+  
+  // 描述小字
+  let subText = widget.addText(`已完成黄金市值的 ${percentage}`);
+  subText.font = Font.systemFont(12);
+  subText.textColor = Color.white();
+  subText.textOpacity = 0.6;
+
+  widget.addSpacer(12);
+
+
+  // [Visual] 动态绘制进度条 (核心黑科技)
+  // 我们在内存里画一张图，然后贴上去
+  let barImg = drawProgressBar(progress);
+  let barView = widget.addImage(barImg);
+  barView.imageSize = new Size(280, 12); // 设置进度条尺寸
+  barView.cornerRadius = 6; // 圆角
+
+
+  // [Footer] 底部对比数据
+  widget.addSpacer(10);
+  let footer = widget.addStack();
+  footer.centerAlignContent();
+
+  // 左边：BTC Logo + 市值
+  let btcIcon = footer.addText("🟠");
+  btcIcon.font = Font.systemFont(10);
+  footer.addSpacer(4);
+  let btcVal = footer.addText("$" + (btcCap / 1e12).toFixed(1) + "T"); // 万亿单位
+  btcVal.font = Font.boldSystemFont(11);
+  btcVal.textColor = Color.white();
+
+  footer.addSpacer(); // 撑开中间
+
+  // 右边：Gold Logo + 市值
+  let goldVal = footer.addText("$" + (GOLD_MARKET_CAP_USD / 1e12).toFixed(1) + "T");
+  goldVal.font = Font.boldSystemFont(11);
+  goldVal.textColor = new Color("#8E8E93"); // 灰色，代表旧时代
+  footer.addSpacer(4);
+  let goldIcon = footer.addText("🟡");
+  goldIcon.font = Font.systemFont(10);
 
 
   return widget;
 };
+
+// --- 辅助函数：绘制进度条 ---
+function drawProgressBar(progress) {
+  // 定义画布尺寸
+  const width = 600;
+  const height = 24;
+  let ctx = new DrawContext();
+  ctx.size = new Size(width, height);
+  ctx.respectScreenScale = true;
+
+  // 1. 绘制轨道 (背景底槽)
+  let trackPath = new Path();
+  trackPath.addRoundedRect(new Rect(0, 0, width, height), height / 2, height / 2);
+  ctx.addPath(trackPath);
+  ctx.setFillColor(new Color("#333333")); // 深灰色底槽
+  ctx.fillPath();
+
+  // 2. 绘制进度 (前景填充)
+  // 算出填充的宽度
+  let fillWidth = width * progress;
+  if (fillWidth < height) fillWidth = height; // 最小显示一个圆点
+
+  let fillPath = new Path();
+  fillPath.addRoundedRect(new Rect(0, 0, fillWidth, height), height / 2, height / 2);
+  ctx.addPath(fillPath);
+  
+  // 渐变色填充：从比特币橙 -> 闪亮金
+  // 这是一个水平渐变
+  // 注意：Scriptable DrawContext 填充渐变比较复杂，这里用纯色或简单的技巧
+  ctx.setFillColor(new Color("#F7931A")); // 核心橙色
+  ctx.fillPath();
+
+  return ctx.getImage();
+}
+
+// --- 辅助函数：获取数据 ---
+async function getBTCData() {
+  const url = "https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false";
+  try {
+    let req = new Request(url);
+    let json = await req.loadJSON();
+    return json.market_data;
+  } catch (e) {
+    return { 
+      market_cap: { usd: 1900000000000 }, 
+      current_price: { usd: 95000 } 
+    }; // 离线默认值
+  }
+}
