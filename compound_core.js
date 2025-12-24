@@ -1,7 +1,6 @@
 // ==========================================
-// ☁️ 云端核心：BTC vs Gold 昼夜火箭版 (v3.1)
-// 修复：解决图标方向问题，白天火箭领航，晚上躺平
-// UI升级：更具科技感的极细进度条
+// ☁️ 云端核心：BTC vs Gold 最终愿景版 (v3.2)
+// UI更新：底部增加 "比特币=黄金" 连接符
 // ==========================================
 
 module.exports.createWidget = async () => {
@@ -22,16 +21,14 @@ module.exports.createWidget = async () => {
   
   // 进度
   const progressPercent = (btcMarketCap / goldMarketCap); 
-  // 还可以涨倍数
   const upsideMultiplier = (goldMarketCap / btcMarketCap) - 1;
-  // 目标单价
   const targetPrice = goldMarketCap / BTC_SUPPLY;
 
 
   // --- 2. 昼夜判断逻辑 ---
   const date = new Date();
   const hour = date.getHours();
-  // 早上7点到晚上11点是白天 (调整了一下作息时间)
+  // 早上7点到晚上11点是白天
   const isDayTime = hour >= 7 && hour < 23;
   
 
@@ -76,33 +73,30 @@ module.exports.createWidget = async () => {
 
 
   // ===========================================
-  // 中部：进度条 + 动态图标 (核心修改点)
+  // 中部：进度条 + 动态图标
   // ===========================================
   
-  // 1. 进度文字 (居中显示)
+  // 1. 进度文字
   let percentLabelStack = widget.addStack();
   percentLabelStack.centerAlignContent();
   percentLabelStack.addSpacer();
   
   let pctStr = (progressPercent * 100).toFixed(2) + "%";
   let multiplierStr = upsideMultiplier.toFixed(2);
-  // 文案：当前进度：5.71%，还可以涨 20.35 倍
-  let infoText = `当前进度：${pctStr}，距离目标还要涨 ${multiplierStr} 倍`;
+  let infoText = `当前进度：${pctStr}，还可以涨 ${multiplierStr} 倍`;
   
   let pText = percentLabelStack.addText(infoText);
-  pText.font = Font.boldSystemFont(11); // 稍微调小字体以放下更多内容
+  pText.font = Font.boldSystemFont(11);
   pText.textColor = new Color("#F0B90B"); 
   
   percentLabelStack.addSpacer();
 
   widget.addSpacer(8);
 
-  // 2. 绘制带图标的进度条图片
-  // 🔴 这里传入 isDayTime 布尔值，让绘图函数决定画什么
+  // 2. 绘制进度条
   let barImage = drawProgressBarWithIcon(progressPercent, isDayTime);
   let imgStack = widget.addStack();
   let img = imgStack.addImage(barImage);
-  // 调整画布高度，让图标显示完整
   img.imageSize = new Size(300, 28); 
   img.cornerRadius = 0;
 
@@ -110,14 +104,28 @@ module.exports.createWidget = async () => {
 
 
   // ===========================================
-  // 底部：市值对比
+  // 底部：市值对比 (修改点在此)
   // ===========================================
   let statsStack = widget.addStack();
   statsStack.layoutHorizontally();
+  statsStack.centerAlignContent(); // 让内容垂直居中对齐
 
+  // 列1: BTC 市值
   addStatColumn(statsStack, "BTC MARKET CAP", "$" + formatTrillion(btcMarketCap), Color.white());
+  
   statsStack.addSpacer();
-  addStatColumn(statsStack, "GOLD MARKET CAP", "$" + formatTrillion(goldMarketCap), new Color("#FFD700"));
+  
+  // 中间：连接符 (新增)
+  let midStack = statsStack.addStack();
+  let midText = midStack.addText("比特币 = 黄金");
+  midText.font = Font.boldSystemFont(10); // 小而精致的字体
+  midText.textColor = new Color("#444444"); // 深灰色，作为低调的背景连接
+  
+  statsStack.addSpacer();
+  
+  // 列2: 黄金市值
+  // 为了右对齐美观，这里稍微处理一下
+  addStatColumn(statsStack, "GOLD MARKET CAP", "$" + formatTrillion(goldMarketCap), new Color("#FFD700"), true);
 
   // 刷新逻辑
   widget.refreshAfterDate = new Date(Date.now() + 1000 * 60 * 15);
@@ -129,46 +137,39 @@ module.exports.createWidget = async () => {
 // 🛠 辅助函数库
 // =======================
 
-// 🎨 核心绘图函数：画重新设计的进度条 + 昼夜图标
 function drawProgressBarWithIcon(pct, isDayTime) {
   const width = 600; 
-  const height = 46; // 画布高度
-  const barHeight = 8; // 进度条变细，更精致
+  const height = 46; 
+  const barHeight = 8;
   const ctx = new DrawContext();
   ctx.size = new Size(width, height);
   ctx.opaque = false;
   
-  // 计算进度条的垂直Y坐标 (让它靠下，给上面留出图标位置)
   const yBarOffset = height - barHeight - 2; 
   
-  // 1. 画底槽 (更深的太空黑)
+  // 底槽
   let trackPath = new Path();
   trackPath.addRoundedRect(new Rect(0, yBarOffset, width, barHeight), barHeight/2, barHeight/2);
   ctx.addPath(trackPath);
   ctx.setFillColor(new Color("#1A1A1A"));
   ctx.fillPath();
   
-  // 2. 画进度 (亮金色火焰)
+  // 进度
   let safePct = pct > 1 ? 1 : pct;
-  // 限制最小宽度，防止进度太小时图标重叠
   let barWidth = Math.max(width * safePct, barHeight + 10);
   
   let barPath = new Path();
   barPath.addRoundedRect(new Rect(0, yBarOffset, barWidth, barHeight), barHeight/2, barHeight/2);
   ctx.addPath(barPath);
-  ctx.setFillColor(new Color("#FFD700")); // 更亮的金色
+  ctx.setFillColor(new Color("#FFD700")); 
   ctx.fillPath();
   
-  // 3. 画图标 (昼夜切换)
+  // 图标
   const emoji = isDayTime ? "🚀" : "🛌";
-  const emojiSize = 26; // 图标大小
+  const emojiSize = 26; 
   
   ctx.setFont(Font.systemFont(emojiSize));
-  
-  // 计算图标位置：
-  // X: 在进度条的最右端，稍微往左缩一点，让它看起来是“领头”的
   let iconX = barWidth - (emojiSize / 1.2); 
-  // Y: 在进度条的上方
   let iconY = yBarOffset - emojiSize + 4; 
   
   ctx.drawText(emoji, new Point(iconX, iconY));
@@ -187,15 +188,22 @@ async function getBinancePrices() {
   } catch (e) { return { btc: 98000, gold: 2600 }; }
 }
 
-function addStatColumn(stack, titleText, valueText, color) {
+// 增加了一个 alignRight 参数，但为了保持 statsStack 默认左对齐逻辑，
+// 我们主要通过 addStatColumn 内部来控制，或者通过外层 spacer 控制。
+// 这里保持原样即可，因为左右都有 Spacer 挤压。
+function addStatColumn(stack, titleText, valueText, color, isRight) {
   let col = stack.addStack();
   col.layoutVertically();
+  
   let t = col.addText(titleText);
   t.font = Font.systemFont(8);
   t.textColor = new Color("#848E9C");
+  // if(isRight) t.rightAlignText(); // 可选：让右边那列文字右对齐
+  
   let v = col.addText(valueText);
   v.font = Font.boldSystemFont(11);
   v.textColor = color;
+  // if(isRight) v.rightAlignText();
 }
 
 function formatNumber(num) { return num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
