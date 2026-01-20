@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>911 投资定投完整日报</title>
+    <style>
+        /* 全局复位 */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+        body {
+            background-color: #f2f2f2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            padding: 20px;
+        }
+
+        /* --- 网页显示区 (也是复制的目标区) --- */
+        #view-container {
+            background-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 80px; /* 底部留白给按钮 */
+        }
+
+        /* 看板图片预览 */
+        #dashboard-preview {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* 网页上的互动图表 */
+        .chart-frame {
+            border: none;
+            display: block;
+            max-width: 100%;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        /* --- 悬浮按钮 --- */
+        .copy-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #07c160; /* 微信绿 */
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(7, 193, 96, 0.4);
+            cursor: pointer;
+            z-index: 1000;
+            display: flex; align-items: center; gap: 8px;
+            transition: transform 0.1s;
+        }
+        .copy-btn:active { transform: scale(0.95); }
+
+        /* --- 消息提示 Toast (无弹窗) --- */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
+            padding: 12px 24px;
+            position: fixed;
+            z-index: 1001;
+            left: 50%;
+            bottom: 100px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 110px;
+        }
+
+        /* --- 隐藏的 HTML 源 (用于 html2canvas 生成图片) --- */
+        .container {
+            width: 500px; background-color: #009688; color: #ffffff;
+            border-radius: 0; margin: auto; border: 10px solid #ffffff;
+        }
+        .header-date-section { height: 90px; border-bottom: 1px solid #ffffff; display: flex; align-items: center; justify-content: center; }
+        .date-line { font-size: 34px; font-weight: bold; letter-spacing: 0.5px; color: #ffffff; line-height: 1; }
+        .header-desc-section { height: 80px; border-bottom: 1px solid #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .title { font-size: 24px; font-weight: normal; margin-bottom: 6px; line-height: 1; }
+        .subtitle { font-size: 14px; opacity: 0.9; font-weight: normal; line-height: 1; }
+        .num-highlight { color: #FFF358; font-size: 34px; font-weight: 400; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; }
+        .cell { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 95px; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff; }
+        .cell:nth-child(2n) { border-right: none; }
+        .label { font-size: 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-weight: 500; color: #fff; line-height: 1; }
+        .value { font-size: 30px; font-weight: 400; font-family: Arial, sans-serif; letter-spacing: 0.5px; line-height: 1; }
+        .footer { height: 24px; padding: 0 10px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; opacity: 0.95; background-color: #009688; }
+
+        /* 加载层 */
+        #loader {
+            position: fixed; inset: 0; background: #fff; z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            color: #009688; font-size: 14px; font-weight: bold;
+            flex-direction: column; gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div>正在同步数据...</div>
+        <div style="font-size:12px; opacity: 0.7;">(请稍候，正在生成完整日报)</div>
+    </div>
+
+    <button class="copy-btn" onclick="copyVisibleContent()">
+        📋 复制全部
+    </button>
+
+    <div id="toast">✅ 已复制！请去公众号粘贴</div>
+
+    <div id="view-container">
+        <div id="dashboard-img-wrapper"></div>
+
+        <iframe class="chart-frame" width="810" height="488" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQE-FKptsdo8sMlFplUgJgkj8F5AgIz91W-FSSo-Pju8BbdiQrdf9r-QE2znU_UAYerLE6sd6LzzG-l/pubchart?oid=1444661989&amp;format=interactive"></iframe>
+        <iframe class="chart-frame" width="810" height="459" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQE-FKptsdo8sMlFplUgJgkj8F5AgIz91W-FSSo-Pju8BbdiQrdf9r-QE2znU_UAYerLE6sd6LzzG-l/pubchart?oid=592652525&amp;format=interactive"></iframe>
+        <iframe class="chart-frame" width="810" height="488" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQE-FKptsdo8sMlFplUgJgkj8F5AgIz91W-FSSo-Pju8BbdiQrdf9r-QE2znU_UAYerLE6sd6LzzG-l/pubchart?oid=1292209635&amp;format=interactive"></iframe>
+    </div>
+
+    <div class="container" id="html-content" style="position: absolute; left: -9999px;">
+        <div class="header-date-section"><div class="date-line" id="date-html"></div></div>
+        <div class="header-desc-section"><div class="title">投资标的</div><div class="subtitle">"比XX"占比大于90%以上的投资组合</div></div>
+        <div class="grid">
+            <div class="cell"><div class="label">💰 整体账户</div><div class="value" id="total-assets">---</div></div>
+            <div class="cell"><div class="label">🏎️911完成率</div><div class="value" id="completion">---</div></div>
+            <div class="cell"><div class="label">😭今日收益</div><div class="value" id="daily-profit">---</div></div>
+            <div class="cell"><div class="label">🚀累计收益</div><div class="value" id="total-profit">---</div></div>
+            <div class="cell"><div class="label">🌕今日买入</div><div class="value" id="daily-buy">---</div></div>
+            <div class="cell"><div class="label">🌗日均买入</div><div class="value" id="avg-daily-buy">---</div></div>
+            <div class="cell"><div class="label">📈累计收益率</div><div class="value" id="roi">---</div></div>
+            <div class="cell"><div class="label">✍️累计成本</div><div class="value" id="total-cost">---</div></div>
+            <div class="cell"><div class="label">💳现金账户</div><div class="value" id="cash-account">---</div></div>
+            <div class="cell"><div class="label">🚁投资账户</div><div class="value" id="invest-account">---</div></div>
+        </div>
+        <div class="footer"><span>备注：今日收益是上次更新到今天的收益</span><span>公众号：詹大鹏</span></div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyXc3hGKA92PEoY543JQUTrLjumxcPYBuADZzHG8oa1nhcpDvvITIFFWnW4B-d3D8OY/exec";
+
+        // 辅助函数
+        function fmtMoney(n) { return (n === "" || n === undefined) ? "---" : "¥" + Math.round(Number(n)).toLocaleString('en-US'); }
+        function fmtPercent(n, decimals=0) { return (n === "" || n === undefined) ? "---" : (Number(n) * 100).toFixed(decimals) + "%"; }
+        function colorNumbers(str) { return str.replace(/(\d+)/g, '<span class="num-highlight">$1</span>'); }
+        function formatDateToCN(dateStr) {
+            let d = new Date(dateStr.replace(/-/g, "/"));
+            if(isNaN(d.getTime())) return dateStr;
+            return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+        }
+
+        // --- 核心：模拟鼠标全选复制 ---
+        function copyVisibleContent() {
+            // 1. 获取目标容器
+            const container = document.getElementById('view-container');
+            
+            // 2. 模拟全选操作 (Select All)
+            const range = document.createRange();
+            range.selectNode(container); // 选中整个容器
+            
+            const selection = window.getSelection();
+            selection.removeAllRanges(); // 清除现有选择
+            selection.addRange(range);   // 应用新选择
+
+            try {
+                // 3. 执行系统复制命令 (Copy)
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast(); // 显示无干扰提示
+                } else {
+                    console.error('复制命令返回 false');
+                }
+            } catch (err) {
+                console.error('复制操作出错', err);
+            }
+            
+            // 4. 清除选区 (保持页面整洁)
+            selection.removeAllRanges();
+        }
+
+        // 显示 Toast 通知 (2秒后消失)
+        function showToast() {
+            var x = document.getElementById("toast");
+            x.className = "show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 2000);
+        }
+
+        // --- 数据加载 ---
+        fetch(API_URL)
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'error') throw new Error(data.message);
+
+                // 1. 填充源数据
+                let dateCN = formatDateToCN(data.date);
+                document.getElementById('date-html').innerHTML = colorNumbers(`${dateCN}，第${data.days}天`);
+                document.getElementById('total-assets').innerText = fmtMoney(data.total_assets);
+                document.getElementById('completion').innerText = fmtPercent(data.completion, 0);
+                document.getElementById('daily-profit').innerText = fmtMoney(data.daily_profit);
+                document.getElementById('total-profit').innerText = fmtMoney(data.total_profit);
+                document.getElementById('daily-buy').innerText = fmtMoney(data.daily_buy);
+                document.getElementById('avg-daily-buy').innerText = fmtMoney(data.avg_daily_buy);
+                document.getElementById('roi').innerText = fmtPercent(data.roi, 2);
+                document.getElementById('total-cost').innerText = fmtMoney(data.total_cost);
+                document.getElementById('cash-account').innerText = fmtMoney(data.cash_account);
+                let investVal = Number(data.invest_account).toFixed(0);
+                document.getElementById('invest-account').innerText = "¥" + Number(investVal).toLocaleString('en-US');
+
+                // 2. 生成看板图片
+                const elementToCapture = document.getElementById('html-content');
+                html2canvas(elementToCapture, {
+                    scale: 2, backgroundColor: "#009688", logging: false, useCORS: true 
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL("image/png");
+                    
+                    // 显示在网页上
+                    const previewImg = document.createElement('img');
+                    previewImg.src = imgData;
+                    previewImg.id = "dashboard-preview";
+                    document.getElementById('dashboard-img-wrapper').appendChild(previewImg);
+
+                    document.getElementById('loader').style.display = 'none';
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('loader').innerText = "加载失败，请刷新";
+                document.getElementById('loader').style.color = "red";
+            });
+    </script>
+</body>
+</html>
