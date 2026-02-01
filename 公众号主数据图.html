@@ -118,6 +118,15 @@
             color: #009688; font-size: 14px; font-weight: bold;
             flex-direction: column; gap: 10px;
         }
+        
+        /* 新增：日期选择器样式，保持极简 */
+        .date-picker-box {
+            background: white; padding: 15px; border-radius: 8px; width: 100%; max-width: 500px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+        }
+        .date-input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; }
+        .update-btn { padding: 8px 16px; background: #009688; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .update-btn:hover { background: #00796b; }
     </style>
 </head>
 <body>
@@ -134,6 +143,13 @@
     <div id="toast">✅ 已复制！请去公众号粘贴</div>
 
     <div id="view-container">
+        <div class="date-picker-box">
+            <input type="date" id="range-start" class="date-input" placeholder="开始日期">
+            <span style="color:#999">至</span>
+            <input type="date" id="range-end" class="date-input" placeholder="结束日期">
+            <button class="update-btn" onclick="updateProfitData()">📊 更新收益</button>
+        </div>
+
         <div id="dashboard-img-wrapper"></div>
 
         <iframe class="chart-frame" width="810" height="488" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQE-FKptsdo8sMlFplUgJgkj8F5AgIz91W-FSSo-Pju8BbdiQrdf9r-QE2znU_UAYerLE6sd6LzzG-l/pubchart?oid=1444661989&amp;format=interactive"></iframe>
@@ -160,7 +176,17 @@
     </div>
 
     <script>
+        // 原有接口 (用于获取全量日报数据)
         const API_URL = "https://script.google.com/macros/s/AKfycbyXc3hGKA92PEoY543JQUTrLjumxcPYBuADZzHG8oa1nhcpDvvITIFFWnW4B-d3D8OY/exec";
+        
+        // 新增接口 (用于计算区间收益，这是上一轮对话中生成的脚本地址)
+        const QUERY_API_URL = "https://script.google.com/macros/s/AKfycbz4yMMFcnIPmp-XrlCZvxgqthCd-oM6CcY3vAavTmo0cCta-qPwCYNW9vXXgXpvTUpG/exec";
+
+        // 设置日期选择器默认值为今天
+        const now = new Date();
+        const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        document.getElementById('range-start').value = today;
+        document.getElementById('range-end').value = today;
 
         // 辅助函数
         function fmtMoney(n) { return (n === "" || n === undefined) ? "---" : "¥" + Math.round(Number(n)).toLocaleString('en-US'); }
@@ -171,44 +197,59 @@
             if(isNaN(d.getTime())) return dateStr;
             return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
         }
+        function formatToSheetDate(dateStr) {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+        }
 
         // --- 核心：模拟鼠标全选复制 ---
         function copyVisibleContent() {
-            // 1. 获取目标容器
             const container = document.getElementById('view-container');
-            
-            // 2. 模拟全选操作 (Select All)
             const range = document.createRange();
-            range.selectNode(container); // 选中整个容器
-            
+            range.selectNode(container);
             const selection = window.getSelection();
-            selection.removeAllRanges(); // 清除现有选择
-            selection.addRange(range);   // 应用新选择
-
+            selection.removeAllRanges();
+            selection.addRange(range);
             try {
-                // 3. 执行系统复制命令 (Copy)
                 const successful = document.execCommand('copy');
-                if (successful) {
-                    showToast(); // 显示无干扰提示
-                } else {
-                    console.error('复制命令返回 false');
-                }
+                if (successful) showToast();
+                else console.error('复制命令返回 false');
             } catch (err) {
                 console.error('复制操作出错', err);
             }
-            
-            // 4. 清除选区 (保持页面整洁)
             selection.removeAllRanges();
         }
 
-        // 显示 Toast 通知 (2秒后消失)
         function showToast() {
             var x = document.getElementById("toast");
             x.className = "show";
             setTimeout(function(){ x.className = x.className.replace("show", ""); }, 2000);
         }
 
-        // --- 数据加载 ---
+        // --- 抽离出来的图片生成逻辑 ---
+        function renderDashboardImage() {
+            const elementToCapture = document.getElementById('html-content');
+            const wrapper = document.getElementById('dashboard-img-wrapper');
+            
+            // 清空旧图片
+            wrapper.innerHTML = '';
+            
+            html2canvas(elementToCapture, {
+                scale: 2, backgroundColor: "#009688", logging: false, useCORS: true 
+            }).then(canvas => {
+                const imgData = canvas.toDataURL("image/png");
+                const previewImg = document.createElement('img');
+                previewImg.src = imgData;
+                previewImg.id = "dashboard-preview";
+                wrapper.appendChild(previewImg);
+                
+                // 确保隐藏加载层
+                document.getElementById('loader').style.display = 'none';
+            });
+        }
+
+        // --- 初始数据加载 ---
         fetch(API_URL)
             .then(res => res.json())
             .then(data => {
@@ -219,6 +260,7 @@
                 document.getElementById('date-html').innerHTML = colorNumbers(`${dateCN}，第${data.days}天`);
                 document.getElementById('total-assets').innerText = fmtMoney(data.total_assets);
                 document.getElementById('completion').innerText = fmtPercent(data.completion, 0);
+                // 默认显示接口返回的单日收益
                 document.getElementById('daily-profit').innerText = fmtMoney(data.daily_profit);
                 document.getElementById('total-profit').innerText = fmtMoney(data.total_profit);
                 document.getElementById('daily-buy').innerText = fmtMoney(data.daily_buy);
@@ -230,26 +272,53 @@
                 document.getElementById('invest-account').innerText = "¥" + Number(investVal).toLocaleString('en-US');
 
                 // 2. 生成看板图片
-                const elementToCapture = document.getElementById('html-content');
-                html2canvas(elementToCapture, {
-                    scale: 2, backgroundColor: "#009688", logging: false, useCORS: true 
-                }).then(canvas => {
-                    const imgData = canvas.toDataURL("image/png");
-                    
-                    // 显示在网页上
-                    const previewImg = document.createElement('img');
-                    previewImg.src = imgData;
-                    previewImg.id = "dashboard-preview";
-                    document.getElementById('dashboard-img-wrapper').appendChild(previewImg);
-
-                    document.getElementById('loader').style.display = 'none';
-                });
+                renderDashboardImage();
             })
             .catch(err => {
                 console.error(err);
                 document.getElementById('loader').innerText = "加载失败，请刷新";
                 document.getElementById('loader').style.color = "red";
             });
+
+        // --- 新增：更新收益数据逻辑 ---
+        async function updateProfitData() {
+            const start = document.getElementById('range-start').value;
+            const end = document.getElementById('range-end').value;
+
+            if (!start || !end) {
+                alert("请选择完整的开始和结束日期");
+                return;
+            }
+
+            // 显示简单loading
+            const btn = document.querySelector('.update-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "计算中...";
+            btn.disabled = true;
+
+            try {
+                // 构建查询链接
+                const params = `?start=${formatToSheetDate(start)}&end=${formatToSheetDate(end)}`;
+                const response = await fetch(QUERY_API_URL + params);
+                const res = await response.json();
+
+                if (res.status === "success") {
+                    // 1. 替换隐藏 HTML 中的数据
+                    document.getElementById('daily-profit').innerText = fmtMoney(res.data);
+                    
+                    // 2. 重新生成图片以反映更改
+                    renderDashboardImage();
+                } else {
+                    alert("查询错误: " + res.message);
+                }
+            } catch (e) {
+                alert("网络请求失败");
+                console.error(e);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
