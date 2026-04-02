@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>共享球小助手</title>
+  <style>
+    ：根 {
+      --bg: #f5f7fb;
+      --card: rgba(255,255,255,0.92);
+      --text: #101828;
+      --已静音：#667085；
+      --line: #d0d5dd;
+      --主键：#2563eb；
+      --primary-soft: rgba(37, 99, 235, 0.1);
+      --shadow: 0 16px 40px rgba(16, 24, 40, 0.08);
+      --半径：22像素；
+    }
+
+    * { box-sizing: border-box; }
+
+    身体 {
+      边距：0；
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+      background: radial-gradient(circle at top, #eef4ff 0%, #f7f9fc 36%, #f5f7fb 100%));
+      颜色：var(--text);
+      最小高度：100vh；
+    }
+
+    。页 {
+      宽度：100%；
+      最大宽度：430像素；
+      margin: 0 auto;
+      内边距：18px 16px 36px；
+    }
+
+    .hero {
+      内边距：18px 6px 10px；
+    }
+
+    .hero h1 {
+      margin: 6px 0 8px;
+      文本对齐方式：居中；
+      字体大小：34px；
+      行高：1.15；
+      字母间距：-0.02em；
+    }
+
+    .hero p {
+      边距：0；
+      文本对齐方式：居中；
+      颜色：var(--muted);
+      字体大小：15px；
+      行高：1.6；
+    }
+
+    。卡片 {
+      background: var(--card);
+      背景滤镜：模糊(8px)；
+      border: 1px solid rgba(255,255,255,0.75);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      内边距：18px；
+      margin-top: 16px;
+    }
+
+    。场地 {
+      margin-bottom: 16px;
+    }
+
+    .field:last-child { margin-bottom: 0; }
+
+    。标签 {
+      显示：块；
+      margin-bottom: 10px;
+      字体大小：15px；
+      字体粗细：700；
+    }
+
+    .input, .small-input {
+      宽度：100%；
+      边框：1.5px 实心 var(--line);
+      圆角半径：16px；
+      背景色：#fff；
+      最小高度：54像素；
+      字体大小：18px；
+      padding: 0 16px;
+      颜色：var(--text);
+      概要：无；
+      transition: .2s border-color, .2s box-shadow, .2s transform;
+      -webkit-appearance: none;
+      外观：无；
+    }
+
+    .input:focus, .small-input:focus {
+      边框颜色：var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-soft);
+      transform: translateY(-1px);
+    }
+
+    .inline-grid {
+      显示方式：网格；
+      grid-template-columns: 1fr auto 1fr auto;
+      align-items: center;
+      间隙：10px；
+    }
+
+    .small-input {
+      文本对齐方式：居中；
+      padding: 0 8px;
+    }
+
+    .inline-text {
+      字体大小：17px；
+      字体粗细：600；
+      颜色：var(--text);
+      空格：不换行；
+    }
+
+    。概括 {
+      margin-top: 18px;
+      圆角半径：18px；
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #3b82f6 100%);
+      内边距：18px；
+      颜色：#fff；
+    }
+
+    .summary-title {
+      不透明度：0.88；
+      字体大小：14px；
+      margin-bottom: 10px;
+    }
+
+    .summary-row {
+      显示方式：flex；
+      justify-content: 空格;
+      对齐项目：基线；
+      间隙：12像素；
+      margin-bottom: 6px;
+    }
+
+    .summary-row:last-child { margin-bottom: 0; }
+
+    .summary-label {
+      字体大小：15px；
+      不透明度：0.92；
+    }
+
+    .summary-value {
+      字体大小：28px；
+      字体粗细：800；
+      字母间距：-0.03em；
+    }
+
+    .summary-sub {
+      文本对齐方式：右对齐；
+      字体大小：15px；
+      不透明度：0.92；
+    }
+
+    .pay-card {
+      文本对齐方式：居中；
+      padding-top: 22px;
+      底部内边距：26px；
+    }
+
+    .qr-wrap {
+      宽度：最小(78vw, 280px)；
+      宽高比：1/1；
+      margin: 6px auto 16px;
+      圆角半径：24px；
+      border: 1px dashed #c7d7fe;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+      显示方式：flex；
+      align-items: center;
+      justify-content: center;
+      溢出：隐藏；
+      内边距：14px；
+    }
+
+    .qr-wrap img {
+      宽度：100%；
+      高度：100%；
+      object-fit: 包含;
+      显示：块；
+      圆角半径：16px；
+      背景色：#fff；
+    }
+
+    。暗示 {
+      边距：0；
+      字体大小：14px；
+      颜色：var(--muted);
+      行高：1.7；
+    }
+
+    。页脚 {
+      文本对齐方式：居中；
+      margin-top: 18px;
+      颜色：var(--muted);
+      字体大小：12像素；
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>共享球小助手</h1>
+      <p>输入场地费、每桶球总价、用了几个球和人数，自动算出总费用与每人分摊金额。</p>
+    </section>
+
+    <section class="card">
+      <div class="field">
+        <label class="label" for="venue">场地费</label>
+        <input id="venue" class="input" type="number" inputmode="decimal" placeholder="例如 40" />
+      </div>
+
+      <div class="field">
+        <label class="label">球费</label>
+        <div class="inline-grid">
+          <input id="bucketPrice" class="small-input" type="number" inputmode="decimal" placeholder="48" />
+          <span class="inline-text">元/桶，用</span>
+          <input id="shuttleUsed" class="small-input" type="number" inputmode="numeric" placeholder="6" />
+          <span class="inline-text">个</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="people">人数</label>
+        <input id="people" class="input" type="number" inputmode="numeric" placeholder="例如 6" />
+      </div>
+
+      <div class="summary" aria-live="polite">
+        <div class="summary-title">自动计算</div>
+        <div class="summary-row">
+          <span class="summary-label">总计</span>
+          <span id="totalText" class="summary-value">0 元</span>
+        </div>
+        <div class="summary-sub" id="perText">每人 0 元</div>
+      </div>
+    </section>
+
+    <section class="card pay-card">
+      <div class="qr-wrap">
+        <img src="https://placehold.co/800x800/png?text=%E4%BB%98%E6%AC%BE%E7%A0%81" alt="付款码占位图" />
+      </div>
+      <p class="hint">手机长按识别二维码付款<br />如需换成真实收款码，把图片发我即可替换。</p>
+    </section>
+
+    <div class="footer">临时分享页面·手机网页改装</div>
+  </main>
+
+  <script>
+    const venue = document.getElementById('venue');
+    const bucketPrice = document.getElementById('bucketPrice');
+    const shuttleUsed = document.getElementById('shuttleUsed');
+    const people = document.getElementById('people');
+    const TotalText = document.getElementById('totalText');
+    const perText = document.getElementById('perText');
+    const SHUTTLES_PER_BUCKET = 12;
+
+    const format = (n) => {
+      如果 (!Number.isFinite(n)) 返回 '0';
+      const rounded = Math.round((n + Number.EPSILON) * 100) / 100;
+      返回 Number.isInteger(rounded)
+        ? 字符串（四舍五入）
+        : rounded.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+    };
+
+    函数 calc() {
+      constvenueFee = parseFloat(venue.value) || 0;
+      const pricePerBucket = parseFloat(bucketPrice.value) || 0;
+      const used = parseFloat(shuttleUsed.value) || 0;
+      const count = parseFloat(people.value) || 0;
+      const shuttleFee = pricePerBucket * (used / SHUTTLES_PER_BUCKET);
+      const total = venueFee + 接驳车费;
+      const per = count > 0 ? total / count : 0;
+
+      TotalText.textContent = `${format(total)} 元`;
+      perText.textContent = 计数 > 0 ？ `每人 ${format(per)} 元` : '每人 0 元';
+    }
+
+    [场地, 桶装价格, 班车使用情况, 人数].forEach(el => {
+      el.addEventListener('input', calc);
+      el.addEventListener('change', calc);
+    });
+
+    venue.value = '40';
+    bucketPrice.value = '48';
+    穿梭机使用值 = '6';
+    people.value = '6';
+    计算();
+  </script>
+</body>
+</html>
