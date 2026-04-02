@@ -267,7 +267,7 @@ body{min-height:100vh}
   <div class="phone">
     <div class="nav">微信收款</div>
 
-    <section class="hero">
+<section class="hero">
       <div class="eyebrow">羽毛球 AA 收款</div>
       <div class="amount">
         <span class="currency">¥</span>
@@ -276,7 +276,7 @@ body{min-height:100vh}
       <div class="hint">按当前人数自动计算每人应付金额</div>
     </section>
 
-    <section class="card pay-card">
+<section class="card pay-card">
       <div class="pay-head">
         <span class="badge">微</span>
         <span>推荐使用微信支付</span>
@@ -287,7 +287,7 @@ body{min-height:100vh}
       <div class="tip">长按识别二维码付款</div>
     </section>
 
-    <section class="section">
+<section class="section">
       <div class="form-card">
         <div class="row">
           <div class="label">场地费</div>
@@ -309,7 +309,7 @@ body{min-height:100vh}
       </div>
     </section>
 
-    <section class="result-card">
+<section class="result-card">
       <div class="result-top">
         <div class="left">费用结果</div>
         <div class="tag">自动计算</div>
@@ -326,12 +326,12 @@ body{min-height:100vh}
       </div>
     </section>
 
-    <div class="actions">
-      <button class="btn" id="saveBtn">保存图片</button>
+<div class="actions">
+      <button class="btn" id="saveBtn">生成图片</button>
     </div>
-    <div class="status" id="statusText">点击后会将整页保存成图片</div>
+    <div class="status" id="statusText">点击后会生成一张图片，可直接长按保存或转发</div>
 
-    <div class="footer">微信支付</div>
+<div class="footer">微信支付</div>
   </div>
 </main>
 
@@ -353,7 +353,7 @@ const SHUTTLES_PER_BUCKET=12;
 function format(n){
   if(!Number.isFinite(n)) return '0';
   const v=Math.round((n+Number.EPSILON)*100)/100;
-  return Number.isInteger(v)?String(v):v.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
+  return Number.isInteger(v)?String(v):v.toFixed(2).replace(/0+$/,'').replace(/\\.$/,'');
 }
 
 function calc(){
@@ -369,7 +369,7 @@ function calc(){
   splitAmount.textContent=`¥ ${format(per)}`;
 }
 
-async function saveImage(){
+async function createImage(){
   statusText.textContent='正在生成图片...';
   captureRoot.classList.add('capture-mode');
   try{
@@ -386,14 +386,31 @@ async function saveImage(){
       return;
     }
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download='wechat-pay-page.png';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    statusText.textContent='图片已保存';
+    const win=window.open('','_blank');
+    if(win){
+      win.document.write(`
+        <!doctype html>
+        <html lang=\"zh-CN\">
+        <head>
+          <meta charset=\"UTF-8\">
+          <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">
+          <title>收款图片</title>
+          <style>
+            html,body{margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh}
+            img{max-width:100vw;max-height:100vh;display:block}
+          </style>
+        </head>
+        <body>
+          <img src=\"${url}\" alt=\"收款图片\">
+        </body>
+        </html>
+      `);
+      win.document.close();
+      statusText.textContent='图片已生成，打开后可直接长按保存或转发';
+    }else{
+      window.location.href=url;
+      statusText.textContent='图片已生成，请长按保存或转发';
+    }
   }finally{
     captureRoot.classList.remove('capture-mode');
   }
@@ -404,7 +421,7 @@ async function saveImage(){
   el.addEventListener('change',calc);
 });
 
-saveBtn.addEventListener('click',saveImage);
+saveBtn.addEventListener('click',createImage);
 
 qrImage.addEventListener('error',()=>{
   statusText.textContent='未找到 qrcode.jpg，请把图片和 html 放同一目录';
