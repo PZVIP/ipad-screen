@@ -1,417 +1,420 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>微信收款</title>
-  <style>
-    :root {
-      --green: #18c55f;
-      --green-dark: #12b352;
-      --bg: #f3f4f5;
-      --card: #ffffff;
-      --text: #111111;
-      --sub: #7a7a7a;
-      --line: rgba(17,17,17,0.06);
-      --shadow: 0 18px 40px rgba(0, 0, 0, 0.10);
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      background: var(--bg);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
-      color: var(--text);
-    }
-
-    .screen {
-      min-height: 100vh;
-      background: linear-gradient(180deg, #20c766 0%, #18c55f 42%, #f3f4f5 42%, #f3f4f5 100%);
-    }
-
-    .phone {
-      width: 100%;
-      max-width: 430px;
-      margin: 0 auto;
-      padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 28px;
-    }
-
-    .nav {
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: .02em;
-    }
-
-    .hero {
-      padding: 10px 10px 18px;
-      text-align: center;
-      color: #fff;
-    }
-
-    .hero .eyebrow {
-      font-size: 15px;
-      opacity: .92;
-      margin-bottom: 12px;
-    }
-
-    .hero .amount {
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      gap: 6px;
-      line-height: 1;
-    }
-
-    .hero .amount .currency {
-      font-size: 30px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .hero .amount .number {
-      font-size: 62px;
-      font-weight: 700;
-      letter-spacing: -0.04em;
-    }
-
-    .hero .hint {
-      margin-top: 12px;
-      font-size: 14px;
-      opacity: .9;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .pay-card {
-      padding: 18px 18px 16px;
-    }
-
-    .pay-head {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 14px;
-      color: #222;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .wx-badge {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #07c160;
-      color: #fff;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      font-weight: 700;
-      flex: 0 0 auto;
-    }
-
-    .qr-wrap {
-      width: 100%;
-      max-width: 290px;
-      margin: 0 auto;
-      border-radius: 18px;
-      overflow: hidden;
-      background: #fff;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
-    }
-
-    .qr-wrap img {
-      width: 100%;
-      display: block;
-    }
-
-    .mini-tip {
-      margin-top: 14px;
-      text-align: center;
-      color: var(--sub);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .section {
-      margin-top: 14px;
-    }
-
-    .section-title {
-      font-size: 14px;
-      color: #222;
-      font-weight: 600;
-      margin: 0 0 10px 4px;
-    }
-
-    .form-card {
-      background: rgba(255,255,255,0.96);
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.05);
-    }
-
-    .row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .row:last-child {
-      border-bottom: none;
-    }
-
-    .label {
-      width: 78px;
-      font-size: 16px;
-      color: #222;
-      flex: 0 0 auto;
-    }
-
-    .input,
-    .small-input {
-      border: none;
-      outline: none;
-      width: 100%;
-      background: transparent;
-      color: #111;
-      font-size: 18px;
-      text-align: right;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    .combo {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .small-input {
-      width: 68px;
-      padding: 0;
-    }
-
-    .unit {
-      font-size: 14px;
-      color: var(--sub);
-      white-space: nowrap;
-    }
-
-    .result-card {
-      margin-top: 14px;
-      background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
-      border-radius: 18px;
-      padding: 16px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.05);
-    }
-
-    .result-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-
-    .result-top .left {
-      font-size: 15px;
-      font-weight: 600;
-      color: #222;
-    }
-
-    .tag {
-      background: rgba(24, 197, 95, 0.12);
-      color: var(--green-dark);
-      border-radius: 999px;
-      font-size: 12px;
-      padding: 5px 10px;
-      font-weight: 600;
-    }
-
-    .result-main {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .result-box {
-      border-radius: 16px;
-      background: #f7f8f9;
-      padding: 16px 12px;
-      text-align: center;
-    }
-
-    .result-box .k {
-      font-size: 13px;
-      color: var(--sub);
-      margin-bottom: 8px;
-    }
-
-    .result-box .v {
-      font-size: 28px;
-      font-weight: 700;
-      line-height: 1.15;
-      color: #111;
-      letter-spacing: -0.03em;
-    }
-
-    .footer-brand {
-      text-align: center;
-      margin-top: 22px;
-      color: #3b3b3b;
-    }
-
-    .footer-brand .icon {
-      font-size: 30px;
-      margin-bottom: 6px;
-    }
-
-    .footer-brand .txt {
-      font-size: 30px;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-    }
-
-    @media (max-width: 375px) {
-      .hero .amount .number { font-size: 54px; }
-      .hero .amount .currency { font-size: 26px; }
-      .label { width: 68px; }
-      .small-input { width: 56px; }
-      .footer-brand .txt { font-size: 26px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>微信收款</title>
+<style>
+:root{
+  --green:#18c55f;
+  --green2:#22c768;
+  --bg:#f3f4f5;
+  --card:#fff;
+  --text:#111;
+  --sub:#767676;
+  --line:rgba(0,0,0,.06);
+  --shadow:0 12px 28px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Helvetica Neue",sans-serif;
+  color:var(--text);
+}
+body{min-height:100vh}
+.screen{
+  min-height:100vh;
+  background:linear-gradient(180deg,var(--green2) 0%,var(--green) 34%,var(--bg) 34%,var(--bg) 100%);
+}
+.phone{
+  width:100%;
+  max-width:430px;
+  margin:0 auto;
+  padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 18px;
+}
+.nav{
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:17px;
+  font-weight:600;
+}
+.hero{
+  text-align:center;
+  color:#fff;
+  padding:4px 6px 12px;
+}
+.hero .eyebrow{
+  font-size:14px;
+  opacity:.92;
+  margin-bottom:8px;
+}
+.hero .amount{
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:4px;
+  line-height:1;
+}
+.hero .currency{
+  font-size:24px;
+  font-weight:600;
+  margin-bottom:6px;
+}
+.hero .number{
+  font-size:48px;
+  font-weight:700;
+  letter-spacing:-.04em;
+}
+.hero .hint{
+  margin-top:8px;
+  font-size:13px;
+  opacity:.9;
+}
+.card{
+  background:var(--card);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+}
+.pay-card{
+  padding:10px 10px 8px;
+  text-align:center;
+}
+.pay-head{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-size:15px;
+  font-weight:600;
+  margin-bottom:6px;
+}
+.badge{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:#07c160;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  font-weight:700;
+}
+.qr-wrap{
+  width:58%;
+  max-width:220px;
+  min-width:140px;
+  margin:0 auto;
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.04);
+}
+.qr-wrap img{
+  display:block;
+  width:100%;
+}
+.tip{
+  margin-top:6px;
+  color:var(--sub);
+  font-size:12px;
+  line-height:1.5;
+}
+.section{
+  margin-top:10px;
+}
+.form-card,.result-card{
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 8px 22px rgba(0,0,0,.05);
+  overflow:hidden;
+}
+.row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:13px 14px;
+  border-bottom:1px solid var(--line);
+}
+.row:last-child{border-bottom:none}
+.label{
+  width:68px;
+  flex:0 0 auto;
+  font-size:15px;
+  color:#222;
+}
+.input,.small{
+  border:none;
+  outline:none;
+  background:transparent;
+  width:100%;
+  font-size:17px;
+  text-align:right;
+  color:#111;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.combo{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+  min-width:0;
+}
+.small{
+  width:56px;
+  padding:0;
+}
+.unit{
+  font-size:13px;
+  color:var(--sub);
+  white-space:nowrap;
+}
+.result-card{
+  margin-top:10px;
+  padding:12px;
+}
+.result-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+.result-top .left{
+  font-size:14px;
+  font-weight:600;
+}
+.tag{
+  font-size:11px;
+  color:#0f9d49;
+  background:rgba(24,197,95,.12);
+  padding:4px 8px;
+  border-radius:999px;
+  font-weight:600;
+}
+.result-main{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.box{
+  background:#f7f8f9;
+  border-radius:14px;
+  padding:12px 10px;
+  text-align:center;
+}
+.box .k{
+  font-size:12px;
+  color:var(--sub);
+  margin-bottom:6px;
+}
+.box .v{
+  font-size:24px;
+  font-weight:700;
+  line-height:1.15;
+  letter-spacing:-.03em;
+}
+.actions{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+.btn{
+  height:46px;
+  border:none;
+  border-radius:14px;
+  background:#1f1f1f;
+  color:#fff;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+}
+.status{
+  margin-top:8px;
+  text-align:center;
+  color:#666;
+  font-size:12px;
+  line-height:1.5;
+  min-height:18px;
+}
+.footer{
+  margin-top:12px;
+  text-align:center;
+  color:#555;
+  font-size:12px;
+}
+.capture-mode .actions,.capture-mode .status{display:none}
+@media (max-width:360px){
+  .hero .number{font-size:42px}
+  .hero .currency{font-size:22px}
+  .label{width:60px}
+  .small{width:48px}
+  .qr-wrap{
+    width:62%;
+    min-width:128px;
+  }
+}
+</style>
 </head>
 <body>
-  <main class="screen">
-    <div class="phone">
-      <div class="nav">微信收款</div>
+<main class="screen" id="captureRoot">
+  <div class="phone">
+    <div class="nav">微信收款</div>
 
-      <section class="hero">
-        <div class="eyebrow">羽毛球 AA 收款</div>
-        <div class="amount">
-          <span class="currency">¥</span>
-          <span class="number" id="perAmount">0</span>
-        </div>
-        <div class="hint">按当前人数自动计算每人应付金额</div>
-      </section>
-
-      <section class="card pay-card">
-        <div class="pay-head">
-          <span class="wx-badge">微</span>
-          <span>推荐使用微信支付</span>
-        </div>
-        <div class="qr-wrap">
-          <img src="qrcode.jpg" alt="微信收款码" />
-        </div>
-        <div class="mini-tip">长按识别二维码付款<br />付款前请核对金额</div>
-      </section>
-
-      <section class="section">
-        <div class="section-title">费用明细</div>
-        <div class="form-card">
-          <div class="row">
-            <div class="label">场地费</div>
-            <input id="venue" class="input" type="number" inputmode="decimal" placeholder="输入金额" />
-          </div>
-          <div class="row">
-            <div class="label">球费</div>
-            <div class="combo">
-              <input id="bucketPrice" class="small-input" type="number" inputmode="decimal" placeholder="48" />
-              <span class="unit">元/桶，用</span>
-              <input id="shuttleUsed" class="small-input" type="number" inputmode="numeric" placeholder="6" />
-              <span class="unit">个</span>
-            </div>
-          </div>
-          <div class="row">
-            <div class="label">人数</div>
-            <input id="people" class="input" type="number" inputmode="numeric" placeholder="输入人数" />
-          </div>
-        </div>
-      </section>
-
-      <section class="result-card">
-        <div class="result-top">
-          <div class="left">费用结果</div>
-          <div class="tag">自动计算</div>
-        </div>
-        <div class="result-main">
-          <div class="result-box">
-            <div class="k">总费用</div>
-            <div class="v" id="totalAmount">¥ 0</div>
-          </div>
-          <div class="result-box">
-            <div class="k">每人应付</div>
-            <div class="v" id="splitAmount">¥ 0</div>
-          </div>
-        </div>
-      </section>
-
-      <div class="footer-brand">
-        <div class="icon">💬</div>
-        <div class="txt">微信支付</div>
+    <section class="hero">
+      <div class="eyebrow">羽毛球 AA 收款</div>
+      <div class="amount">
+        <span class="currency">¥</span>
+        <span class="number" id="perAmount">0</span>
       </div>
+      <div class="hint">按当前人数自动计算每人应付金额</div>
+    </section>
+
+    <section class="card pay-card">
+      <div class="pay-head">
+        <span class="badge">微</span>
+        <span>推荐使用微信支付</span>
+      </div>
+      <div class="qr-wrap">
+        <img src="qrcode.jpg" alt="微信收款码" id="qrImage">
+      </div>
+      <div class="tip">长按识别二维码付款</div>
+    </section>
+
+    <section class="section">
+      <div class="form-card">
+        <div class="row">
+          <div class="label">场地费</div>
+          <input id="venue" class="input" type="number" inputmode="decimal" placeholder="输入金额">
+        </div>
+        <div class="row">
+          <div class="label">球费</div>
+          <div class="combo">
+            <input id="bucketPrice" class="small" type="number" inputmode="decimal" placeholder="48">
+            <span class="unit">元/桶，用</span>
+            <input id="shuttleUsed" class="small" type="number" inputmode="numeric" placeholder="6">
+            <span class="unit">个</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="label">人数</div>
+          <input id="people" class="input" type="number" inputmode="numeric" placeholder="输入人数">
+        </div>
+      </div>
+    </section>
+
+    <section class="result-card">
+      <div class="result-top">
+        <div class="left">费用结果</div>
+        <div class="tag">自动计算</div>
+      </div>
+      <div class="result-main">
+        <div class="box">
+          <div class="k">总费用</div>
+          <div class="v" id="totalAmount">¥ 0</div>
+        </div>
+        <div class="box">
+          <div class="k">每人应付</div>
+          <div class="v" id="splitAmount">¥ 0</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn" id="saveBtn">保存图片</button>
     </div>
-  </main>
+    <div class="status" id="statusText">点击后会将整页保存成图片</div>
 
-  <script>
-    const venue = document.getElementById('venue');
-    const bucketPrice = document.getElementById('bucketPrice');
-    const shuttleUsed = document.getElementById('shuttleUsed');
-    const people = document.getElementById('people');
-    const perAmount = document.getElementById('perAmount');
-    const totalAmount = document.getElementById('totalAmount');
-    const splitAmount = document.getElementById('splitAmount');
-    const SHUTTLES_PER_BUCKET = 12;
+    <div class="footer">微信支付</div>
+  </div>
+</main>
 
-    const format = (n) => {
-      if (!Number.isFinite(n)) return '0';
-      const rounded = Math.round((n + Number.EPSILON) * 100) / 100;
-      return Number.isInteger(rounded)
-        ? String(rounded)
-        : rounded.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
-    };
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+const venue=document.getElementById('venue');
+const bucketPrice=document.getElementById('bucketPrice');
+const shuttleUsed=document.getElementById('shuttleUsed');
+const people=document.getElementById('people');
+const perAmount=document.getElementById('perAmount');
+const totalAmount=document.getElementById('totalAmount');
+const splitAmount=document.getElementById('splitAmount');
+const saveBtn=document.getElementById('saveBtn');
+const statusText=document.getElementById('statusText');
+const captureRoot=document.getElementById('captureRoot');
+const qrImage=document.getElementById('qrImage');
+const SHUTTLES_PER_BUCKET=12;
 
-    function calc() {
-      const venueFee = parseFloat(venue.value) || 0;
-      const pricePerBucket = parseFloat(bucketPrice.value) || 0;
-      const used = parseFloat(shuttleUsed.value) || 0;
-      const count = parseFloat(people.value) || 0;
-      const shuttleFee = pricePerBucket * (used / SHUTTLES_PER_BUCKET);
-      const total = venueFee + shuttleFee;
-      const per = count > 0 ? total / count : 0;
+function format(n){
+  if(!Number.isFinite(n)) return '0';
+  const v=Math.round((n+Number.EPSILON)*100)/100;
+  return Number.isInteger(v)?String(v):v.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
+}
 
-      perAmount.textContent = format(per);
-      totalAmount.textContent = `¥ ${format(total)}`;
-      splitAmount.textContent = `¥ ${format(per)}`;
-    }
+function calc(){
+  const venueFee=parseFloat(venue.value)||0;
+  const pricePerBucket=parseFloat(bucketPrice.value)||0;
+  const used=parseFloat(shuttleUsed.value)||0;
+  const count=parseFloat(people.value)||0;
+  const shuttleFee=pricePerBucket*(used/SHUTTLES_PER_BUCKET);
+  const total=venueFee+shuttleFee;
+  const per=count>0?total/count:0;
+  perAmount.textContent=format(per);
+  totalAmount.textContent=`¥ ${format(total)}`;
+  splitAmount.textContent=`¥ ${format(per)}`;
+}
 
-    [venue, bucketPrice, shuttleUsed, people].forEach((el) => {
-      el.addEventListener('input', calc);
-      el.addEventListener('change', calc);
+async function saveImage(){
+  statusText.textContent='正在生成图片...';
+  captureRoot.classList.add('capture-mode');
+  try{
+    const canvas=await html2canvas(captureRoot,{
+      backgroundColor:null,
+      scale:Math.min(window.devicePixelRatio||2,3),
+      useCORS:true,
+      scrollX:0,
+      scrollY:0
     });
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));
+    if(!blob){
+      statusText.textContent='图片生成失败，请重试';
+      return;
+    }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='wechat-pay-page.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    statusText.textContent='图片已保存';
+  }finally{
+    captureRoot.classList.remove('capture-mode');
+  }
+}
 
-    venue.value = '40';
-    bucketPrice.value = '168';
-    shuttleUsed.value = '6';
-    people.value = '6';
-    calc();
-  </script>
+[venue,bucketPrice,shuttleUsed,people].forEach(el=>{
+  el.addEventListener('input',calc);
+  el.addEventListener('change',calc);
+});
+
+saveBtn.addEventListener('click',saveImage);
+
+qrImage.addEventListener('error',()=>{
+  statusText.textContent='未找到 qrcode.jpg，请把图片和 html 放同一目录';
+});
+
+venue.value='40';
+bucketPrice.value='48';
+shuttleUsed.value='6';
+people.value='6';
+calc();
+</script>
 </body>
 </html>
