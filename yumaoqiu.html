@@ -10,11 +10,10 @@
       --bg: #f6f6f6;
       --text: #111111;
       --shadow: 0 14px 32px rgba(0, 0, 0, 0.10);
+      --btn-dark: #1f1f1f;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -41,7 +40,7 @@
       position: absolute;
       left: -10%;
       right: -10%;
-      bottom: 132px;
+      bottom: 210px;
       height: 180px;
       background: var(--bg);
       border-radius: 50% 50% 0 0 / 100% 100% 0 0;
@@ -62,6 +61,11 @@
       align-items: center;
     }
 
+    .capture-card {
+      width: 100%;
+      max-width: 390px;
+    }
+
     .title {
       margin: 8px 0 28px;
       color: #fff;
@@ -74,6 +78,7 @@
     .pay-card {
       width: 100%;
       max-width: 320px;
+      margin: 0 auto;
       background: #fff;
       border-radius: 16px;
       box-shadow: var(--shadow);
@@ -97,7 +102,7 @@
     .calc-panel {
       width: 100%;
       max-width: 360px;
-      margin-top: 30px;
+      margin: 30px auto 0;
       padding: 0 4px;
       color: #222;
     }
@@ -146,9 +151,7 @@
       border-bottom: 1px solid rgba(0,0,0,0.06);
     }
 
-    .row:last-child {
-      border-bottom: none;
-    }
+    .row:last-child { border-bottom: none; }
 
     .label {
       min-width: 86px;
@@ -218,11 +221,55 @@
       line-height: 1.2;
     }
 
+    .toolbar {
+      width: 100%;
+      max-width: 360px;
+      margin: 22px auto 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 14px;
+      height: 48px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: #fff;
+      color: #111;
+    }
+
+    .btn-dark {
+      background: var(--btn-dark);
+      color: #fff;
+    }
+
+    .tip {
+      width: 100%;
+      max-width: 360px;
+      margin: 12px auto 0;
+      text-align: center;
+      color: rgba(34,34,34,0.82);
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 20px;
+    }
+
     .wechat-brand {
       position: relative;
       z-index: 1;
       margin-top: auto;
-      padding-top: 42px;
+      padding-top: 30px;
       text-align: center;
       color: #2c2c2c;
       width: 100%;
@@ -238,64 +285,78 @@
       font-weight: 500;
     }
 
+    .capture-mode .toolbar,
+    .capture-mode .tip {
+      visibility: hidden;
+    }
+
     @media (max-width: 375px) {
       .title { font-size: 24px; }
       .amount-box .value { font-size: 46px; }
       .label { min-width: 74px; }
       .mini-input { width: 52px; }
       .wechat-brand .text { font-size: 28px; }
+      .toolbar { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <main class="page">
+  <main class="page" id="captureRoot">
     <div class="inner">
-      <h1 class="title">推荐使用微信支付</h1>
+      <div class="capture-card" id="captureCard">
+        <h1 class="title">推荐使用微信支付</h1>
 
-      <section class="pay-card">
-        <div class="qr-shell">
-          <img alt="微信收款码" src="qrcode.jpg" />
-        </div>
-      </section>
-
-      <section class="calc-panel">
-        <div class="amount-box">
-          <span class="currency">¥</span>
-          <span class="value" id="perAmount">0</span>
-        </div>
-        <div class="desc">羽毛球 AA 收款 · 自动计算每人应付金额</div>
-
-        <div class="form">
-          <div class="row">
-            <div class="label">场地费</div>
-            <input id="venue" class="input" type="number" inputmode="decimal" placeholder="输入金额" />
+        <section class="pay-card">
+          <div class="qr-shell">
+            <img alt="微信收款码" src="qrcode.jpg" id="qrImage" />
           </div>
-          <div class="row">
-            <div class="label">球费</div>
-            <div class="combo">
-              <input id="bucketPrice" class="mini-input" type="number" inputmode="decimal" placeholder="48" />
-              <span class="unit">元/桶，用</span>
-              <input id="shuttleUsed" class="mini-input" type="number" inputmode="numeric" placeholder="6" />
-              <span class="unit">个</span>
+        </section>
+
+        <section class="calc-panel">
+          <div class="amount-box">
+            <span class="currency">¥</span>
+            <span class="value" id="perAmount">0</span>
+          </div>
+          <div class="desc">羽毛球 AA 收款 · 自动计算每人应付金额</div>
+
+          <div class="form">
+            <div class="row">
+              <div class="label">场地费</div>
+              <input id="venue" class="input" type="number" inputmode="decimal" placeholder="输入金额" />
+            </div>
+            <div class="row">
+              <div class="label">球费</div>
+              <div class="combo">
+                <input id="bucketPrice" class="mini-input" type="number" inputmode="decimal" placeholder="48" />
+                <span class="unit">元/桶，用</span>
+                <input id="shuttleUsed" class="mini-input" type="number" inputmode="numeric" placeholder="6" />
+                <span class="unit">个</span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label">人数</div>
+              <input id="people" class="input" type="number" inputmode="numeric" placeholder="输入人数" />
             </div>
           </div>
-          <div class="row">
-            <div class="label">人数</div>
-            <input id="people" class="input" type="number" inputmode="numeric" placeholder="输入人数" />
-          </div>
-        </div>
 
-        <div class="summary">
-          <div class="summary-card">
-            <div class="k">总费用</div>
-            <div class="v" id="totalAmount">¥ 0</div>
+          <div class="summary">
+            <div class="summary-card">
+              <div class="k">总费用</div>
+              <div class="v" id="totalAmount">¥ 0</div>
+            </div>
+            <div class="summary-card">
+              <div class="k">每人应付</div>
+              <div class="v" id="splitAmount">¥ 0</div>
+            </div>
           </div>
-          <div class="summary-card">
-            <div class="k">每人应付</div>
-            <div class="v" id="splitAmount">¥ 0</div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary" id="downloadBtn">保存截图</button>
+        <button class="btn btn-dark" id="shareBtn">转发到群</button>
+      </div>
+      <div class="tip" id="tipText">点“转发到群”后，会生成整页截图，手机可直接分享。</div>
 
       <div class="wechat-brand">
         <div class="logo">💬</div>
@@ -304,6 +365,7 @@
     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     const venue = document.getElementById('venue');
     const bucketPrice = document.getElementById('bucketPrice');
@@ -312,6 +374,11 @@
     const perAmount = document.getElementById('perAmount');
     const totalAmount = document.getElementById('totalAmount');
     const splitAmount = document.getElementById('splitAmount');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const tipText = document.getElementById('tipText');
+    const captureRoot = document.getElementById('captureRoot');
+    const qrImage = document.getElementById('qrImage');
     const SHUTTLES_PER_BUCKET = 12;
 
     const format = (n) => {
@@ -336,9 +403,89 @@
       splitAmount.textContent = `¥ ${format(per)}`;
     }
 
+    async function createScreenshotBlob() {
+      captureRoot.classList.add('capture-mode');
+      try {
+        const canvas = await html2canvas(captureRoot, {
+          backgroundColor: null,
+          scale: Math.min(window.devicePixelRatio || 2, 3),
+          useCORS: true,
+          scrollX: 0,
+          scrollY: 0
+        });
+
+        return await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 1));
+      } finally {
+        captureRoot.classList.remove('capture-mode');
+      }
+    }
+
+    async function downloadScreenshot() {
+      tipText.textContent = '正在生成截图...';
+      const blob = await createScreenshotBlob();
+      if (!blob) {
+        tipText.textContent = '截图生成失败，请重试';
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'wechat-pay-share.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      tipText.textContent = '截图已保存，可直接发到群里';
+    }
+
+    async function shareScreenshot() {
+      tipText.textContent = '正在生成截图...';
+      const blob = await createScreenshotBlob();
+      if (!blob) {
+        tipText.textContent = '截图生成失败，请重试';
+        return;
+      }
+
+      const file = new File([blob], 'wechat-pay-share.png', { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: '微信支付收款页',
+            text: '羽毛球AA收款'
+          });
+          tipText.textContent = '已调用系统分享，可直接转发到群';
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') {
+            tipText.textContent = '你已取消分享';
+            return;
+          }
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'wechat-pay-share.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      tipText.textContent = '当前浏览器不支持直接分享，已自动下载截图，请手动发到群';
+    }
+
     [venue, bucketPrice, shuttleUsed, people].forEach((el) => {
       el.addEventListener('input', calc);
       el.addEventListener('change', calc);
+    });
+
+    downloadBtn.addEventListener('click', downloadScreenshot);
+    shareBtn.addEventListener('click', shareScreenshot);
+
+    qrImage.addEventListener('error', () => {
+      tipText.textContent = '未找到 qrcode.jpg，请把收款码图片和 html 放同一目录';
     });
 
     venue.value = '40';
