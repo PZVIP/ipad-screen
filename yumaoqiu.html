@@ -3,170 +3,193 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>推荐使用微信支付</title>
+  <title>微信收款</title>
   <style>
     :root {
-      --wechat-green: #16c45b;
-      --bg: #f6f6f6;
+      --green: #18c55f;
+      --green-dark: #12b352;
+      --bg: #f3f4f5;
+      --card: #ffffff;
       --text: #111111;
-      --shadow: 0 14px 32px rgba(0, 0, 0, 0.10);
-      --btn-dark: #1f1f1f;
+      --sub: #7a7a7a;
+      --line: rgba(17,17,17,0.06);
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.10);
     }
 
     * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
-      min-height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
       background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
       color: var(--text);
     }
 
-    body {
+    .screen {
       min-height: 100vh;
+      background: linear-gradient(180deg, #20c766 0%, #18c55f 42%, #f3f4f5 42%, #f3f4f5 100%);
     }
 
-    .page {
-      width: 100%;
-      min-height: 100vh;
-      background: linear-gradient(180deg, var(--wechat-green) 0%, #18c45e 58%, #1cc663 100%);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .page::after {
-      content: "";
-      position: absolute;
-      left: -10%;
-      right: -10%;
-      bottom: 210px;
-      height: 180px;
-      background: var(--bg);
-      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-      transform: scaleX(1.05);
-      z-index: 0;
-    }
-
-    .inner {
-      position: relative;
-      z-index: 1;
+    .phone {
       width: 100%;
       max-width: 430px;
       margin: 0 auto;
-      padding: calc(env(safe-area-inset-top, 0px) + 28px) 20px 40px;
-      min-height: 100vh;
+      padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 28px;
+    }
+
+    .nav {
+      height: 44px;
       display: flex;
-      flex-direction: column;
       align-items: center;
-    }
-
-    .capture-card {
-      width: 100%;
-      max-width: 390px;
-    }
-
-    .title {
-      margin: 8px 0 28px;
+      justify-content: center;
       color: #fff;
-      font-size: 28px;
-      line-height: 1.25;
-      font-weight: 700;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+
+    .hero {
+      padding: 10px 10px 18px;
       text-align: center;
+      color: #fff;
+    }
+
+    .hero .eyebrow {
+      font-size: 15px;
+      opacity: .92;
+      margin-bottom: 12px;
+    }
+
+    .hero .amount {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 6px;
+      line-height: 1;
+    }
+
+    .hero .amount .currency {
+      font-size: 30px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .hero .amount .number {
+      font-size: 62px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .hero .hint {
+      margin-top: 12px;
+      font-size: 14px;
+      opacity: .9;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
     }
 
     .pay-card {
-      width: 100%;
-      max-width: 320px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      padding: 20px 18px 16px;
-      text-align: center;
+      padding: 18px 18px 16px;
     }
 
-    .qr-shell {
-      width: 100%;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #fff;
-    }
-
-    .qr-shell img {
-      width: 100%;
-      display: block;
-      object-fit: cover;
-    }
-
-    .calc-panel {
-      width: 100%;
-      max-width: 360px;
-      margin: 30px auto 0;
-      padding: 0 4px;
-      color: #222;
-    }
-
-    .amount-box {
+    .pay-head {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: center;
-      gap: 6px;
-      margin-bottom: 18px;
+      gap: 8px;
+      margin-bottom: 14px;
       color: #222;
-    }
-
-    .amount-box .currency {
-      font-size: 26px;
+      font-size: 16px;
       font-weight: 600;
     }
 
-    .amount-box .value {
-      font-size: 52px;
-      line-height: 1;
+    .wx-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #07c160;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
       font-weight: 700;
-      letter-spacing: -0.03em;
+      flex: 0 0 auto;
     }
 
-    .desc {
-      text-align: center;
-      color: #666;
-      font-size: 14px;
-      line-height: 1.7;
-      margin-bottom: 18px;
-    }
-
-    .form {
-      background: rgba(255,255,255,0.94);
-      border-radius: 16px;
+    .qr-wrap {
+      width: 100%;
+      max-width: 290px;
+      margin: 0 auto;
+      border-radius: 18px;
       overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+    }
+
+    .qr-wrap img {
+      width: 100%;
+      display: block;
+    }
+
+    .mini-tip {
+      margin-top: 14px;
+      text-align: center;
+      color: var(--sub);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .section {
+      margin-top: 14px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      color: #222;
+      font-weight: 600;
+      margin: 0 0 10px 4px;
+    }
+
+    .form-card {
+      background: rgba(255,255,255,0.96);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.05);
     }
 
     .row {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 15px 16px;
-      border-bottom: 1px solid rgba(0,0,0,0.06);
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
     }
 
-    .row:last-child { border-bottom: none; }
+    .row:last-child {
+      border-bottom: none;
+    }
 
     .label {
-      min-width: 86px;
+      width: 78px;
       font-size: 16px;
       color: #222;
+      flex: 0 0 auto;
     }
 
     .input,
-    .mini-input {
+    .small-input {
       border: none;
       outline: none;
-      background: transparent;
-      font-size: 18px;
-      color: #111;
       width: 100%;
+      background: transparent;
+      color: #111;
+      font-size: 18px;
       text-align: right;
       -webkit-appearance: none;
       appearance: none;
@@ -179,193 +202,174 @@
       justify-content: flex-end;
       gap: 6px;
       min-width: 0;
-      flex-wrap: nowrap;
     }
 
-    .mini-input {
-      width: 62px;
+    .small-input {
+      width: 68px;
       padding: 0;
     }
 
     .unit {
-      color: #666;
       font-size: 14px;
+      color: var(--sub);
       white-space: nowrap;
     }
 
-    .summary {
+    .result-card {
       margin-top: 14px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.05);
     }
 
-    .summary-card {
-      background: rgba(255,255,255,0.94);
-      border-radius: 14px;
-      padding: 14px 12px;
-      text-align: center;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
     }
 
-    .summary-card .k {
-      color: #666;
-      font-size: 13px;
-      margin-bottom: 8px;
+    .result-top .left {
+      font-size: 15px;
+      font-weight: 600;
+      color: #222;
     }
 
-    .summary-card .v {
-      color: #111;
-      font-size: 24px;
-      font-weight: 700;
-      line-height: 1.2;
+    .tag {
+      background: rgba(24, 197, 95, 0.12);
+      color: var(--green-dark);
+      border-radius: 999px;
+      font-size: 12px;
+      padding: 5px 10px;
+      font-weight: 600;
     }
 
-    .toolbar {
-      width: 100%;
-      max-width: 360px;
-      margin: 22px auto 0;
+    .result-main {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
-    .btn {
-      border: none;
-      border-radius: 14px;
-      height: 48px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform .15s ease, opacity .15s ease;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn-primary {
-      background: #fff;
-      color: #111;
-    }
-
-    .btn-dark {
-      background: var(--btn-dark);
-      color: #fff;
-    }
-
-    .tip {
-      width: 100%;
-      max-width: 360px;
-      margin: 12px auto 0;
+    .result-box {
+      border-radius: 16px;
+      background: #f7f8f9;
+      padding: 16px 12px;
       text-align: center;
-      color: rgba(34,34,34,0.82);
+    }
+
+    .result-box .k {
       font-size: 13px;
-      line-height: 1.6;
-      min-height: 20px;
+      color: var(--sub);
+      margin-bottom: 8px;
     }
 
-    .wechat-brand {
-      position: relative;
-      z-index: 1;
-      margin-top: auto;
-      padding-top: 30px;
+    .result-box .v {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.15;
+      color: #111;
+      letter-spacing: -0.03em;
+    }
+
+    .footer-brand {
       text-align: center;
-      color: #2c2c2c;
-      width: 100%;
+      margin-top: 22px;
+      color: #3b3b3b;
     }
 
-    .wechat-brand .logo {
-      font-size: 34px;
-      margin-bottom: 10px;
+    .footer-brand .icon {
+      font-size: 30px;
+      margin-bottom: 6px;
     }
 
-    .wechat-brand .text {
-      font-size: 32px;
+    .footer-brand .txt {
+      font-size: 30px;
       font-weight: 500;
-    }
-
-    .capture-mode .toolbar,
-    .capture-mode .tip {
-      visibility: hidden;
+      letter-spacing: 0.02em;
     }
 
     @media (max-width: 375px) {
-      .title { font-size: 24px; }
-      .amount-box .value { font-size: 46px; }
-      .label { min-width: 74px; }
-      .mini-input { width: 52px; }
-      .wechat-brand .text { font-size: 28px; }
-      .toolbar { grid-template-columns: 1fr; }
+      .hero .amount .number { font-size: 54px; }
+      .hero .amount .currency { font-size: 26px; }
+      .label { width: 68px; }
+      .small-input { width: 56px; }
+      .footer-brand .txt { font-size: 26px; }
     }
   </style>
 </head>
 <body>
-  <main class="page" id="captureRoot">
-    <div class="inner">
-      <div class="capture-card" id="captureCard">
-        <h1 class="title">推荐使用微信支付</h1>
+  <main class="screen">
+    <div class="phone">
+      <div class="nav">微信收款</div>
 
-        <section class="pay-card">
-          <div class="qr-shell">
-            <img alt="微信收款码" src="qrcode.jpg" id="qrImage" />
+      <section class="hero">
+        <div class="eyebrow">羽毛球 AA 收款</div>
+        <div class="amount">
+          <span class="currency">¥</span>
+          <span class="number" id="perAmount">0</span>
+        </div>
+        <div class="hint">按当前人数自动计算每人应付金额</div>
+      </section>
+
+      <section class="card pay-card">
+        <div class="pay-head">
+          <span class="wx-badge">微</span>
+          <span>推荐使用微信支付</span>
+        </div>
+        <div class="qr-wrap">
+          <img src="qrcode.jpg" alt="微信收款码" />
+        </div>
+        <div class="mini-tip">长按识别二维码付款<br />付款前请核对金额</div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">费用明细</div>
+        <div class="form-card">
+          <div class="row">
+            <div class="label">场地费</div>
+            <input id="venue" class="input" type="number" inputmode="decimal" placeholder="输入金额" />
           </div>
-        </section>
-
-        <section class="calc-panel">
-          <div class="amount-box">
-            <span class="currency">¥</span>
-            <span class="value" id="perAmount">0</span>
-          </div>
-          <div class="desc">羽毛球 AA 收款 · 自动计算每人应付金额</div>
-
-          <div class="form">
-            <div class="row">
-              <div class="label">场地费</div>
-              <input id="venue" class="input" type="number" inputmode="decimal" placeholder="输入金额" />
-            </div>
-            <div class="row">
-              <div class="label">球费</div>
-              <div class="combo">
-                <input id="bucketPrice" class="mini-input" type="number" inputmode="decimal" placeholder="48" />
-                <span class="unit">元/桶，用</span>
-                <input id="shuttleUsed" class="mini-input" type="number" inputmode="numeric" placeholder="6" />
-                <span class="unit">个</span>
-              </div>
-            </div>
-            <div class="row">
-              <div class="label">人数</div>
-              <input id="people" class="input" type="number" inputmode="numeric" placeholder="输入人数" />
-            </div>
-          </div>
-
-          <div class="summary">
-            <div class="summary-card">
-              <div class="k">总费用</div>
-              <div class="v" id="totalAmount">¥ 0</div>
-            </div>
-            <div class="summary-card">
-              <div class="k">每人应付</div>
-              <div class="v" id="splitAmount">¥ 0</div>
+          <div class="row">
+            <div class="label">球费</div>
+            <div class="combo">
+              <input id="bucketPrice" class="small-input" type="number" inputmode="decimal" placeholder="48" />
+              <span class="unit">元/桶，用</span>
+              <input id="shuttleUsed" class="small-input" type="number" inputmode="numeric" placeholder="6" />
+              <span class="unit">个</span>
             </div>
           </div>
-        </section>
-      </div>
+          <div class="row">
+            <div class="label">人数</div>
+            <input id="people" class="input" type="number" inputmode="numeric" placeholder="输入人数" />
+          </div>
+        </div>
+      </section>
 
-      <div class="toolbar">
-        <button class="btn btn-primary" id="downloadBtn">保存截图</button>
-        <button class="btn btn-dark" id="shareBtn">转发到群</button>
-      </div>
-      <div class="tip" id="tipText">点“转发到群”后，会生成整页截图，手机可直接分享。</div>
+      <section class="result-card">
+        <div class="result-top">
+          <div class="left">费用结果</div>
+          <div class="tag">自动计算</div>
+        </div>
+        <div class="result-main">
+          <div class="result-box">
+            <div class="k">总费用</div>
+            <div class="v" id="totalAmount">¥ 0</div>
+          </div>
+          <div class="result-box">
+            <div class="k">每人应付</div>
+            <div class="v" id="splitAmount">¥ 0</div>
+          </div>
+        </div>
+      </section>
 
-      <div class="wechat-brand">
-        <div class="logo">💬</div>
-        <div class="text">微信支付</div>
+      <div class="footer-brand">
+        <div class="icon">💬</div>
+        <div class="txt">微信支付</div>
       </div>
     </div>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     const venue = document.getElementById('venue');
     const bucketPrice = document.getElementById('bucketPrice');
@@ -374,11 +378,6 @@
     const perAmount = document.getElementById('perAmount');
     const totalAmount = document.getElementById('totalAmount');
     const splitAmount = document.getElementById('splitAmount');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const shareBtn = document.getElementById('shareBtn');
-    const tipText = document.getElementById('tipText');
-    const captureRoot = document.getElementById('captureRoot');
-    const qrImage = document.getElementById('qrImage');
     const SHUTTLES_PER_BUCKET = 12;
 
     const format = (n) => {
@@ -403,93 +402,13 @@
       splitAmount.textContent = `¥ ${format(per)}`;
     }
 
-    async function createScreenshotBlob() {
-      captureRoot.classList.add('capture-mode');
-      try {
-        const canvas = await html2canvas(captureRoot, {
-          backgroundColor: null,
-          scale: Math.min(window.devicePixelRatio || 2, 3),
-          useCORS: true,
-          scrollX: 0,
-          scrollY: 0
-        });
-
-        return await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 1));
-      } finally {
-        captureRoot.classList.remove('capture-mode');
-      }
-    }
-
-    async function downloadScreenshot() {
-      tipText.textContent = '正在生成截图...';
-      const blob = await createScreenshotBlob();
-      if (!blob) {
-        tipText.textContent = '截图生成失败，请重试';
-        return;
-      }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'wechat-pay-share.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      tipText.textContent = '截图已保存，可直接发到群里';
-    }
-
-    async function shareScreenshot() {
-      tipText.textContent = '正在生成截图...';
-      const blob = await createScreenshotBlob();
-      if (!blob) {
-        tipText.textContent = '截图生成失败，请重试';
-        return;
-      }
-
-      const file = new File([blob], 'wechat-pay-share.png', { type: 'image/png' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: '微信支付收款页',
-            text: '羽毛球AA收款'
-          });
-          tipText.textContent = '已调用系统分享，可直接转发到群';
-          return;
-        } catch (err) {
-          if (err && err.name === 'AbortError') {
-            tipText.textContent = '你已取消分享';
-            return;
-          }
-        }
-      }
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'wechat-pay-share.png';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      tipText.textContent = '当前浏览器不支持直接分享，已自动下载截图，请手动发到群';
-    }
-
     [venue, bucketPrice, shuttleUsed, people].forEach((el) => {
       el.addEventListener('input', calc);
       el.addEventListener('change', calc);
     });
 
-    downloadBtn.addEventListener('click', downloadScreenshot);
-    shareBtn.addEventListener('click', shareScreenshot);
-
-    qrImage.addEventListener('error', () => {
-      tipText.textContent = '未找到 qrcode.jpg，请把收款码图片和 html 放同一目录';
-    });
-
     venue.value = '40';
-    bucketPrice.value = '48';
+    bucketPrice.value = '168';
     shuttleUsed.value = '6';
     people.value = '6';
     calc();
