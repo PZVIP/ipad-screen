@@ -3,251 +3,305 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>羽毛球小助手</title>
+  <title>推荐使用微信支付</title>
   <style>
     :root {
-      --bg: #f5f7fb;
-      --card: rgba(255,255,255,0.92);
-      --text: #101828;
-      --muted: #667085;
-      --line: #d0d5dd;
-      --primary: #2563eb;
-      --primary-soft: rgba(37, 99, 235, 0.1);
-      --shadow: 0 16px 40px rgba(16, 24, 40, 0.08);
-      --radius: 22px;
+      --wechat-green: #16c45b;
+      --bg: #f6f6f6;
+      --text: #111111;
+      --shadow: 0 14px 32px rgba(0, 0, 0, 0.10);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
 
     body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
-      background: radial-gradient(circle at top, #eef4ff 0%, #f7f9fc 36%, #f5f7fb 100%);
-      color: var(--text);
       min-height: 100vh;
     }
 
     .page {
       width: 100%;
+      min-height: 100vh;
+      background: linear-gradient(180deg, var(--wechat-green) 0%, #18c45e 58%, #1cc663 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page::after {
+      content: "";
+      position: absolute;
+      left: -10%;
+      right: -10%;
+      bottom: 132px;
+      height: 180px;
+      background: var(--bg);
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      transform: scaleX(1.05);
+      z-index: 0;
+    }
+
+    .inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
       max-width: 430px;
       margin: 0 auto;
-      padding: 18px 16px 36px;
+      padding: calc(env(safe-area-inset-top, 0px) + 28px) 20px 40px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    .hero {
-      padding: 18px 6px 10px;
-    }
-
-    .hero h1 {
-      margin: 6px 0 8px;
+    .title {
+      margin: 8px 0 28px;
+      color: #fff;
+      font-size: 28px;
+      line-height: 1.25;
+      font-weight: 700;
       text-align: center;
-      font-size: 34px;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
     }
 
-    .hero p {
-      margin: 0;
-      text-align: center;
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    .card {
-      background: var(--card);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.75);
-      border-radius: var(--radius);
+    .pay-card {
+      width: 100%;
+      max-width: 320px;
+      background: #fff;
+      border-radius: 16px;
       box-shadow: var(--shadow);
-      padding: 18px;
-      margin-top: 16px;
+      padding: 20px 18px 16px;
+      text-align: center;
     }
 
-    .field {
-      margin-bottom: 16px;
+    .qr-shell {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
     }
 
-    .field:last-child { margin-bottom: 0; }
+    .qr-shell img {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .calc-panel {
+      width: 100%;
+      max-width: 360px;
+      margin-top: 30px;
+      padding: 0 4px;
+      color: #222;
+    }
+
+    .amount-box {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 18px;
+      color: #222;
+    }
+
+    .amount-box .currency {
+      font-size: 26px;
+      font-weight: 600;
+    }
+
+    .amount-box .value {
+      font-size: 52px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .desc {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .form {
+      background: rgba(255,255,255,0.94);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 16px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .row:last-child {
+      border-bottom: none;
+    }
 
     .label {
-      display: block;
-      margin-bottom: 10px;
-      font-size: 15px;
-      font-weight: 700;
+      min-width: 86px;
+      font-size: 16px;
+      color: #222;
     }
 
-    .input, .small-input {
-      width: 100%;
-      border: 1.5px solid var(--line);
-      border-radius: 16px;
-      background: #fff;
-      min-height: 54px;
-      font-size: 18px;
-      padding: 0 16px;
-      color: var(--text);
+    .input,
+    .mini-input {
+      border: none;
       outline: none;
-      transition: .2s border-color, .2s box-shadow, .2s transform;
+      background: transparent;
+      font-size: 18px;
+      color: #111;
+      width: 100%;
+      text-align: right;
       -webkit-appearance: none;
       appearance: none;
     }
 
-    .input:focus, .small-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px var(--primary-soft);
-      transform: translateY(-1px);
-    }
-
-    .inline-grid {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr auto;
+    .combo {
+      flex: 1;
+      display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: flex-end;
+      gap: 6px;
+      min-width: 0;
+      flex-wrap: nowrap;
     }
 
-    .small-input {
-      text-align: center;
-      padding: 0 8px;
+    .mini-input {
+      width: 62px;
+      padding: 0;
     }
 
-    .inline-text {
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--text);
+    .unit {
+      color: #666;
+      font-size: 14px;
       white-space: nowrap;
     }
 
     .summary {
-      margin-top: 18px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #3b82f6 100%);
-      padding: 18px;
-      color: #fff;
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
 
-    .summary-title {
-      opacity: .88;
-      font-size: 14px;
+    .summary-card {
+      background: rgba(255,255,255,0.94);
+      border-radius: 14px;
+      padding: 14px 12px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+    }
+
+    .summary-card .k {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .summary-card .v {
+      color: #111;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .wechat-brand {
+      position: relative;
+      z-index: 1;
+      margin-top: auto;
+      padding-top: 42px;
+      text-align: center;
+      color: #2c2c2c;
+      width: 100%;
+    }
+
+    .wechat-brand .logo {
+      font-size: 34px;
       margin-bottom: 10px;
     }
 
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 12px;
-      margin-bottom: 6px;
+    .wechat-brand .text {
+      font-size: 32px;
+      font-weight: 500;
     }
 
-    .summary-row:last-child { margin-bottom: 0; }
-
-    .summary-label {
-      font-size: 15px;
-      opacity: .92;
-    }
-
-    .summary-value {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-    }
-
-    .summary-sub {
-      text-align: right;
-      font-size: 15px;
-      opacity: .92;
-    }
-
-    .pay-card {
-      text-align: center;
-      padding-top: 22px;
-      padding-bottom: 26px;
-    }
-
-    .qr-wrap {
-      width: min(78vw, 280px);
-      aspect-ratio: 1 / 1;
-      margin: 6px auto 16px;
-      border-radius: 24px;
-      border: 1px dashed #c7d7fe;
-      background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      padding: 14px;
-    }
-
-    .qr-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-      border-radius: 16px;
-      background: #fff;
-    }
-
-    .hint {
-      margin: 0;
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 12px;
+    @media (max-width: 375px) {
+      .title { font-size: 24px; }
+      .amount-box .value { font-size: 46px; }
+      .label { min-width: 74px; }
+      .mini-input { width: 52px; }
+      .wechat-brand .text { font-size: 28px; }
     }
   </style>
 </head>
 <body>
   <main class="page">
-    <section class="hero">
-      <h1>羽毛球小助手</h1>
-      <p>输入场地费、每桶球总价、用了几个球和人数，自动算出总费用与每人分摊金额。</p>
-    </section>
+    <div class="inner">
+      <h1 class="title">推荐使用微信支付</h1>
 
-    <section class="card">
-      <div class="field">
-        <label class="label" for="venue">场地费</label>
-        <input id="venue" class="input" type="number" inputmode="decimal" placeholder="例如 40" />
-      </div>
-
-      <div class="field">
-        <label class="label">球费</label>
-        <div class="inline-grid">
-          <input id="bucketPrice" class="small-input" type="number" inputmode="decimal" placeholder="48" />
-          <span class="inline-text">元 / 桶，用</span>
-          <input id="shuttleUsed" class="small-input" type="number" inputmode="numeric" placeholder="6" />
-          <span class="inline-text">个</span>
+      <section class="pay-card">
+        <div class="qr-shell">
+          <img alt="微信收款码" src="qrcode.jpg" />
         </div>
-      </div>
+      </section>
 
-      <div class="field">
-        <label class="label" for="people">人数</label>
-        <input id="people" class="input" type="number" inputmode="numeric" placeholder="例如 6" />
-      </div>
-
-      <div class="summary" aria-live="polite">
-        <div class="summary-title">自动计算</div>
-        <div class="summary-row">
-          <span class="summary-label">共计</span>
-          <span id="totalText" class="summary-value">0 元</span>
+      <section class="calc-panel">
+        <div class="amount-box">
+          <span class="currency">¥</span>
+          <span class="value" id="perAmount">0</span>
         </div>
-        <div class="summary-sub" id="perText">每人 0 元</div>
-      </div>
-    </section>
+        <div class="desc">羽毛球 AA 收款 · 自动计算每人应付金额</div>
 
-    <section class="card pay-card">
-      <div class="qr-wrap">
-        <img src="https://placehold.co/800x800/png?text=%E4%BB%98%E6%AC%BE%E7%A0%81" alt="付款码占位图" />
-      </div>
-      <p class="hint">手机长按识别二维码付款<br />如需换成真实收款码，把图片发我即可替换。</p>
-    </section>
+        <div class="form">
+          <div class="row">
+            <div class="label">场地费</div>
+            <input id="venue" class="input" type="number" inputmode="decimal" placeholder="输入金额" />
+          </div>
+          <div class="row">
+            <div class="label">球费</div>
+            <div class="combo">
+              <input id="bucketPrice" class="mini-input" type="number" inputmode="decimal" placeholder="48" />
+              <span class="unit">元/桶，用</span>
+              <input id="shuttleUsed" class="mini-input" type="number" inputmode="numeric" placeholder="6" />
+              <span class="unit">个</span>
+            </div>
+          </div>
+          <div class="row">
+            <div class="label">人数</div>
+            <input id="people" class="input" type="number" inputmode="numeric" placeholder="输入人数" />
+          </div>
+        </div>
 
-    <div class="footer">临时分享页 · 手机网页适配</div>
+        <div class="summary">
+          <div class="summary-card">
+            <div class="k">总费用</div>
+            <div class="v" id="totalAmount">¥ 0</div>
+          </div>
+          <div class="summary-card">
+            <div class="k">每人应付</div>
+            <div class="v" id="splitAmount">¥ 0</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="wechat-brand">
+        <div class="logo">💬</div>
+        <div class="text">微信支付</div>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -255,8 +309,9 @@
     const bucketPrice = document.getElementById('bucketPrice');
     const shuttleUsed = document.getElementById('shuttleUsed');
     const people = document.getElementById('people');
-    const totalText = document.getElementById('totalText');
-    const perText = document.getElementById('perText');
+    const perAmount = document.getElementById('perAmount');
+    const totalAmount = document.getElementById('totalAmount');
+    const splitAmount = document.getElementById('splitAmount');
     const SHUTTLES_PER_BUCKET = 12;
 
     const format = (n) => {
@@ -276,11 +331,12 @@
       const total = venueFee + shuttleFee;
       const per = count > 0 ? total / count : 0;
 
-      totalText.textContent = `${format(total)} 元`;
-      perText.textContent = count > 0 ? `每人 ${format(per)} 元` : '每人 0 元';
+      perAmount.textContent = format(per);
+      totalAmount.textContent = `¥ ${format(total)}`;
+      splitAmount.textContent = `¥ ${format(per)}`;
     }
 
-    [venue, bucketPrice, shuttleUsed, people].forEach(el => {
+    [venue, bucketPrice, shuttleUsed, people].forEach((el) => {
       el.addEventListener('input', calc);
       el.addEventListener('change', calc);
     });
