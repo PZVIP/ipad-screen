@@ -1,4 +1,4 @@
-const WORKER_URL = "github-lashi.zhandapengpeng.workers.dev/write";
+const WORKER_URL = "https://github-metadata.zhandapengpeng.workers.dev/write";
 
 const form = document.getElementById("logForm");
 const statusEl = document.getElementById("status");
