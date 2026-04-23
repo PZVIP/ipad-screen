@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Metadata" />
+    <title>Metadata PWA</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <h1>Metadata</h1>
+        <p>快速记录你的原始数据</p>
+      </header>
+
+      <section class="card">
+        <form id="logForm">
+          <label class="field">
+            <span>来源</span>
+            <select id="source" name="source">
+              <option value="pwa">pwa</option>
+              <option value="wecom">wecom</option>
+              <option value="nfc">nfc</option>
+              <option value="ios_auto">ios_auto</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>输入类型</span>
+            <select id="type" name="type">
+              <option value="text">text</option>
+              <option value="event">event</option>
+              <option value="location">location</option>
+              <option value="state">state</option>
+              <option value="decision">decision</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>内容</span>
+            <textarea
+              id="content"
+              name="content"
+              rows="5"
+              placeholder="例如：今天在三只羊吃饭，喝了5瓶啤酒，一瓶矿泉水，花了140块钱。"
+              required
+            ></textarea>
+          </label>
+
+          <label class="field inline">
+            <input id="withLocation" type="checkbox" checked />
+            <span>提交时自动尝试附带当前位置</span>
+          </label>
+
+          <label class="field">
+            <span>标签（逗号分隔，可选）</span>
+            <input id="tags" type="text" placeholder="meal, social, alcohol" />
+          </label>
+
+          <div class="actions">
+            <button type="submit" id="submitBtn">提交记录</button>
+          </div>
+        </form>
+
+        <div id="status" class="status"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-title">最近提交</div>
+        <ul id="recentList" class="recent-list"></ul>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
