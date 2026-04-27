@@ -3,22 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>羽毛球 AA 结算台</title>
+    <title>羽毛球活动收款</title>
     <style>
       :root {
-        --bg: #071116;
-        --panel: #0d1b22;
-        --panel-2: #102630;
-        --line: rgba(116, 232, 213, 0.18);
-        --text: #eefaf8;
-        --muted: #8fa7aa;
-        --cyan: #28e0c4;
-        --blue: #42a5ff;
-        --orange: #ff9e57;
-        --green-soft: rgba(40, 224, 196, 0.13);
-        --blue-soft: rgba(66, 165, 255, 0.13);
-        --orange-soft: rgba(255, 158, 87, 0.13);
-        --shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+        --wechat: #07c160;
+        --wechat-dark: #05a957;
+        --bg: #f5f6f7;
+        --card: #ffffff;
+        --soft: #f6f7f8;
+        --text: #17191d;
+        --muted: #8b9098;
+        --line: #edf0f2;
       }
 
       * {
@@ -29,22 +24,12 @@
       body {
         margin: 0;
         min-height: 100%;
-      }
-
-      html {
         background: var(--bg);
       }
 
       body {
-        display: grid;
-        place-items: center;
-        padding: 14px;
         color: var(--text);
-        background:
-          linear-gradient(135deg, rgba(40, 224, 196, 0.17), transparent 28%),
-          linear-gradient(225deg, rgba(66, 165, 255, 0.14), transparent 30%),
-          var(--bg);
-        font-family: Inter, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", Arial, sans-serif;
+        font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", Arial, sans-serif;
       }
 
       button,
@@ -52,301 +37,105 @@
         font: inherit;
       }
 
-      .app {
-        width: min(1120px, calc(100vw - 28px));
-        max-height: calc(100vh - 28px);
-        display: grid;
-        grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
-        gap: 16px;
-      }
-
-      .panel {
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        background: linear-gradient(180deg, rgba(17, 40, 50, 0.96), rgba(10, 25, 31, 0.96));
-        box-shadow: var(--shadow);
-        overflow: hidden;
-      }
-
-      .controls {
-        padding: 22px;
+      .page {
+        width: min(760px, 100%);
+        margin: 0 auto;
+        min-height: 100vh;
+        padding-bottom: max(22px, env(safe-area-inset-bottom));
+        background: var(--bg);
       }
 
       .hero {
-        display: flex;
-        align-items: start;
-        justify-content: space-between;
-        gap: 18px;
-        margin-bottom: 18px;
-      }
-
-      .eyebrow {
-        margin: 0 0 8px;
-        color: var(--cyan);
-        font-size: 12px;
-        font-weight: 900;
-        letter-spacing: 0.16em;
+        padding: 34px 22px 118px;
+        color: #fff;
+        text-align: center;
+        background: linear-gradient(180deg, #14d56f 0%, var(--wechat) 100%);
       }
 
       h1 {
         margin: 0;
-        font-size: clamp(32px, 4vw, 48px);
-        line-height: 1.02;
+        font-size: clamp(34px, 7vw, 54px);
+        line-height: 1.08;
+        font-weight: 900;
         letter-spacing: 0;
       }
 
-      .status {
-        min-width: 128px;
-        padding: 10px 12px;
-        border: 1px solid rgba(40, 224, 196, 0.28);
-        border-radius: 999px;
-        color: var(--cyan);
-        background: var(--green-soft);
-        text-align: center;
-        font-size: 13px;
+      .main-amount {
+        margin-top: 24px;
+      }
+
+      .amount-label {
+        font-size: 24px;
+        font-weight: 700;
+        opacity: 0.92;
+      }
+
+      .amount-value {
+        display: block;
+        margin-top: 2px;
+        font-size: clamp(58px, 14vw, 96px);
+        line-height: 1;
         font-weight: 900;
+        letter-spacing: -1px;
       }
 
-      .form-grid {
+      .amount-tip {
+        margin: 18px 0 0;
+        font-size: 18px;
+        opacity: 0.82;
+      }
+
+      .content {
+        margin-top: -86px;
+        padding: 0 16px;
         display: grid;
-        gap: 12px;
-      }
-
-      .group {
-        padding: 14px;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.035);
-      }
-
-      .sentence {
-        display: flex;
-        align-items: baseline;
-        flex-wrap: nowrap;
-        gap: 0;
-        color: var(--text);
-        font-size: clamp(18px, 2.15vw, 24px);
-        font-weight: 850;
-        line-height: 1.65;
-        min-width: 0;
-        white-space: nowrap;
-      }
-
-      .mode-switch {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        padding: 5px;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.035);
-      }
-
-      .mode-btn {
-        min-height: 42px;
-        border: 0;
-        border-radius: 10px;
-        color: var(--muted);
-        background: transparent;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 900;
-      }
-
-      .mode-btn.active {
-        color: var(--text);
-        background: linear-gradient(135deg, rgba(40, 224, 196, 0.2), rgba(66, 165, 255, 0.16));
-        box-shadow: inset 0 0 0 1px rgba(40, 224, 196, 0.24);
-      }
-
-      .people-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
         gap: 16px;
       }
 
-      .people-row.equal {
-        grid-template-columns: 1fr;
+      .card {
+        border-radius: 26px;
+        background: var(--card);
+        box-shadow: 0 10px 30px rgba(32, 38, 46, 0.06);
+        overflow: hidden;
       }
 
-      .people-row.equal .female-person,
-      .people-row.equal .male-person-label {
-        display: none;
-      }
-
-      input[type="number"] {
-        width: 78px;
-        height: 44px;
-        margin: 0 6px;
-        border: 0;
-        border-bottom: 2px solid rgba(238, 250, 248, 0.62);
-        border-radius: 0;
-        padding: 0 3px;
-        color: var(--text);
-        background: rgba(40, 224, 196, 0.07);
-        outline: none;
-        font-size: 18px;
-        font-weight: 900;
+      .qr-card {
+        padding: 24px 20px 22px;
         text-align: center;
-        appearance: textfield;
       }
 
-      input[type="number"]:focus {
-        border-bottom-color: var(--cyan);
-        box-shadow: 0 10px 24px rgba(40, 224, 196, 0.08);
-      }
-
-      .num-short {
-        width: 58px !important;
-      }
-
-      input::-webkit-outer-spin-button,
-      input::-webkit-inner-spin-button {
-        margin: 0;
-        appearance: none;
-      }
-
-      .derived-card {
+      .pay-recommend {
         display: inline-flex;
-        align-items: baseline;
-        gap: 6px;
-        margin-left: 10px;
-        padding: 7px 10px;
-        border: 1px solid rgba(40, 224, 196, 0.18);
-        border-radius: 999px;
-        background: rgba(40, 224, 196, 0.07);
-      }
-
-      .derived-card span {
-        display: inline;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 800;
-      }
-
-      .derived-card strong {
-        display: inline;
-        margin-top: 0;
-        color: var(--cyan);
-        font-size: 18px;
-        line-height: 1;
-      }
-
-      .dashboard {
-        padding: 18px;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .total-card {
-        padding: 10px 2px 12px;
-        display: flex;
-        align-items: baseline;
-        justify-content: flex-end;
-        gap: 8px;
-        border-bottom: 1px solid rgba(143, 167, 170, 0.18);
-      }
-
-      .metric-label {
-        color: var(--muted);
-        font-size: 13px;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        color: var(--text);
+        font-size: 22px;
         font-weight: 900;
       }
 
-      .total-value {
-        margin-top: 0;
-        color: var(--cyan);
-        font-size: clamp(30px, 4.4vw, 46px);
-        line-height: 1;
-        font-weight: 950;
-      }
-
-      .pay-grid {
-        margin-top: 12px;
+      .wechat-dot {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-
-      .pay-grid.equal {
-        grid-template-columns: 1fr;
-      }
-
-      .pay-card {
-        min-height: 126px;
-        padding: 16px;
-        border-radius: 16px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-
-      .pay-card.male {
-        border: 1px solid rgba(66, 165, 255, 0.26);
-        background: var(--blue-soft);
-      }
-
-      .pay-card.female {
-        border: 1px solid rgba(255, 158, 87, 0.28);
-        background: var(--orange-soft);
-      }
-
-      .pay-card.hidden {
-        display: none;
-      }
-
-      .pay-card strong {
-        font-size: clamp(30px, 4.2vw, 46px);
-        line-height: 1;
-      }
-
-      .pay-card.male strong {
-        color: var(--blue);
-      }
-
-      .pay-card.female strong {
-        color: var(--orange);
-      }
-
-      .breakdown {
-        margin-top: 12px;
-        display: grid;
-        gap: 8px;
-        padding: 14px 0;
-        border-top: 1px dashed rgba(143, 167, 170, 0.28);
-        border-bottom: 1px dashed rgba(143, 167, 170, 0.28);
-      }
-
-      .row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        color: var(--muted);
-        font-size: 14px;
-        line-height: 1.35;
-      }
-
-      .row strong {
-        color: var(--text);
-        text-align: right;
-      }
-
-      .qr-section {
-        margin-top: auto;
-        padding-top: 12px;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 14px;
-        align-items: center;
+        place-items: center;
+        color: #fff;
+        background: var(--wechat);
+        font-size: 22px;
+        font-weight: 900;
       }
 
       .qr-box {
         position: relative;
-        width: min(172px, 25vh);
+        display: block;
+        width: min(42.857%, 300px);
+        min-width: 180px;
         aspect-ratio: 1;
-        border: 1px solid rgba(143, 167, 170, 0.22);
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.045);
+        margin: 0 auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
         overflow: hidden;
         cursor: pointer;
       }
@@ -354,13 +143,13 @@
       .qr-placeholder {
         position: absolute;
         inset: 14px;
-        border-radius: 10px;
+        border-radius: 12px;
         background:
-          radial-gradient(circle at 72% 20%, rgba(238, 250, 248, 0.8) 0 9%, transparent 9.5%),
-          linear-gradient(33deg, #28e0c4 0 43%, transparent 43.5%),
-          linear-gradient(151deg, transparent 0 53%, #42a5ff 53.5% 100%),
-          linear-gradient(22deg, transparent 0 58%, #1a7698 58.5% 100%),
-          rgba(255, 255, 255, 0.92);
+          radial-gradient(circle at 73% 20%, #d5d9dc 0 9%, transparent 9.5%),
+          linear-gradient(33deg, #07c160 0 43%, transparent 43.5%),
+          linear-gradient(151deg, transparent 0 53%, #22c982 53.5% 100%),
+          linear-gradient(22deg, transparent 0 58%, #40a9ff 58.5% 100%),
+          #f7faf9;
       }
 
       .qr-box img {
@@ -368,8 +157,8 @@
         inset: 0;
         width: 100%;
         height: 100%;
-        display: none;
         object-fit: cover;
+        display: none;
         background: #fff;
       }
 
@@ -385,407 +174,435 @@
         display: none;
       }
 
-      .pay-title {
-        margin: 0 0 6px;
-        font-size: clamp(22px, 3vw, 32px);
-        line-height: 1.08;
-        font-weight: 950;
-      }
-
-      .pay-sub {
-        margin: 0;
+      .qr-tip {
+        margin: 14px 0 0;
         color: var(--muted);
-        font-size: 13px;
-        font-weight: 800;
-        line-height: 1.5;
-        word-break: break-word;
+        font-size: 16px;
+        font-weight: 600;
       }
 
-      @media (max-width: 860px) {
-        body {
-          padding: 8px;
-        }
+      .mode-card {
+        padding: 10px;
+      }
 
-        .app {
-          width: calc(100vw - 16px);
-          max-height: none;
-          grid-template-columns: 1fr;
-          gap: 8px;
-        }
+      .mode-switch {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        border-radius: 18px;
+        background: var(--soft);
+        padding: 5px;
+      }
 
-        .controls,
-        .dashboard {
-          padding: 12px;
-        }
+      .mode-btn {
+        min-height: 44px;
+        border: 0;
+        border-radius: 14px;
+        color: #697077;
+        background: transparent;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 800;
+      }
 
+      .mode-btn.active {
+        color: #fff;
+        background: var(--wechat);
+      }
+
+      .form-card {
+        padding: 0;
+      }
+
+      .input-row {
+        min-height: 66px;
+        padding: 0 22px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border-bottom: 1px solid var(--line);
+        font-size: 21px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .input-row:last-child {
+        border-bottom: 0;
+      }
+
+      .people-row.equal .female-person {
+        display: none;
+      }
+
+      .people-row.equal {
+        justify-content: flex-start;
+      }
+
+      .inline-input {
+        width: 64px;
+        height: 38px;
+        margin: 0 4px;
+        border: 0;
+        border-bottom: 2px solid #d7dde1;
+        border-radius: 0;
+        color: var(--text);
+        background: transparent;
+        outline: none;
+        font-size: 21px;
+        font-weight: 900;
+        text-align: center;
+        appearance: textfield;
+      }
+
+      .inline-input:focus {
+        border-bottom-color: var(--wechat);
+      }
+
+      .inline-input.short {
+        width: 48px;
+      }
+
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        margin: 0;
+        appearance: none;
+      }
+
+      .derived-pill {
+        margin-left: 8px;
+        padding: 6px 11px;
+        border-radius: 999px;
+        color: var(--wechat-dark);
+        background: #e9f8ef;
+        font-size: 17px;
+        font-weight: 900;
+      }
+
+      .result-card {
+        padding: 24px 20px;
+      }
+
+      .result-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .result-title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 900;
+      }
+
+      .auto-badge {
+        padding: 7px 12px;
+        border-radius: 999px;
+        color: var(--wechat-dark);
+        background: #dff8e9;
+        font-size: 15px;
+        font-weight: 900;
+      }
+
+      .result-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .result-grid.equal {
+        grid-template-columns: 1fr;
+      }
+
+      .result-box {
+        min-height: 118px;
+        padding: 18px;
+        border-radius: 20px;
+        background: var(--soft);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .result-box.hidden {
+        display: none;
+      }
+
+      .result-box span {
+        color: var(--muted);
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .result-box strong {
+        margin-top: 8px;
+        font-size: clamp(34px, 7vw, 52px);
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .footer {
+        padding: 18px 0 0;
+        color: #7a8088;
+        text-align: center;
+        font-size: 17px;
+      }
+
+      .generate-btn {
+        width: 100%;
+        min-height: 54px;
+        border: 0;
+        border-radius: 18px;
+        color: #fff;
+        background: var(--wechat);
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .generate-btn:active {
+        background: var(--wechat-dark);
+      }
+
+      .generate-action {
+        padding: 2px 0 0;
+      }
+
+      .image-preview {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: none;
+        padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+        background: rgba(0, 0, 0, 0.72);
+        overflow: auto;
+        text-align: center;
+      }
+
+      .image-preview.show {
+        display: block;
+      }
+
+      .preview-close {
+        position: sticky;
+        top: 0;
+        margin: 0 auto 12px;
+        min-height: 42px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0 18px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.18);
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .image-preview img {
+        width: 100%;
+        max-width: 520px;
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.26);
+        background: #fff;
+      }
+
+      .image-preview p {
+        margin: 10px 0 0;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      @media (max-width: 560px) {
         .hero {
-          margin-bottom: 10px;
+          padding: 30px 18px 104px;
         }
 
-        h1 {
-          font-size: 28px;
+        .amount-label {
+          font-size: 20px;
         }
 
-        .status {
-          display: none;
-        }
-
-        .group {
-          padding: 10px;
-        }
-
-        .derived-card {
-          margin-left: 6px;
-          padding: 5px 8px;
-        }
-
-        .derived-card strong {
-          font-size: 15px;
-        }
-
-        input[type="number"] {
-          width: 58px;
-          height: 32px;
+        .amount-tip {
           font-size: 16px;
         }
 
-        .sentence {
-          font-size: clamp(15px, 4vw, 18px);
-          line-height: 1.55;
+        .content {
+          margin-top: -76px;
+          padding: 0 12px;
+          gap: 14px;
         }
 
-        .people-row {
-          gap: 8px;
+        .card {
+          border-radius: 22px;
         }
 
-        .num-short {
-          width: 42px !important;
+        .qr-card {
+          padding: 20px 16px;
         }
 
-        .total-card {
-          padding: 6px 2px 8px;
-        }
-
-        .total-value {
-          font-size: 32px;
-        }
-
-        .pay-card {
-          min-height: 88px;
-          padding: 12px;
-        }
-
-        .breakdown {
-          margin-top: 8px;
-          padding: 8px 0;
-          gap: 5px;
-        }
-
-        .qr-section {
-          padding-top: 8px;
+        .pay-recommend {
+          font-size: 20px;
         }
 
         .qr-box {
-          width: min(116px, 20vh);
-        }
-      }
-
-      @media (max-width: 520px) {
-        body {
-          min-height: 100dvh;
-          place-items: start center;
-          padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+          width: min(42.857%, 220px);
+          min-width: 150px;
         }
 
-        .app {
-          width: 100%;
-          gap: 8px;
-          overflow-x: hidden;
-        }
-
-        .panel {
-          border-radius: 14px;
-          box-shadow: none;
-        }
-
-        .controls,
-        .dashboard {
-          padding: 10px;
-        }
-
-        .hero {
-          gap: 8px;
-          margin-bottom: 8px;
-        }
-
-        .eyebrow {
-          margin-bottom: 5px;
-          font-size: 10px;
-          letter-spacing: 0.13em;
-        }
-
-        h1 {
-          font-size: 25px;
-        }
-
-        .form-grid {
-          gap: 8px;
-        }
-
-        .group {
-          padding: 9px 10px;
-          border-radius: 12px;
-        }
-
-        .group-head {
-          margin-bottom: 5px;
-        }
-
-        .sentence {
+        .input-row {
+          min-height: 58px;
+          padding: 0 16px;
           flex-wrap: wrap;
-          column-gap: 0;
-          row-gap: 5px;
-          font-size: 16px;
-          line-height: 1.55;
+          row-gap: 4px;
+          font-size: 18px;
           white-space: normal;
         }
 
-        input[type="number"] {
+        .inline-input {
           width: 56px;
-          height: 30px;
-          margin: 0 4px;
-          font-size: 16px;
+          height: 34px;
+          font-size: 18px;
         }
 
-        .num-short {
-          width: 40px !important;
+        .inline-input.short {
+          width: 42px;
         }
 
-        .derived-card {
-          margin: 4px 0 0 0;
-          padding: 5px 8px;
-          max-width: 100%;
-        }
-
-        .people-row {
-          grid-template-columns: 1fr 1fr;
-          min-width: 0;
-        }
-
-        .people-row.equal {
-          grid-template-columns: 1fr;
-        }
-
-        .total-card {
-          justify-content: space-between;
-          padding: 4px 0 8px;
-        }
-
-        .total-value {
-          font-size: 30px;
-        }
-
-        .pay-grid {
-          gap: 8px;
-          margin-top: 8px;
-        }
-
-        .pay-card {
-          min-height: 78px;
-          padding: 10px;
-          border-radius: 12px;
-        }
-
-        .pay-card strong {
-          font-size: 27px;
-        }
-
-        .metric-label,
-        .row,
-        .pay-sub {
-          font-size: 12px;
-        }
-
-        .breakdown {
-          margin-top: 7px;
-          padding: 7px 0;
-          gap: 4px;
-        }
-
-        .qr-section {
-          grid-template-columns: auto 1fr;
-          gap: 10px;
-          padding-top: 8px;
-        }
-
-        .qr-box {
-          width: 82px;
-          border-radius: 12px;
-        }
-
-        .qr-placeholder {
-          inset: 9px;
-        }
-
-        .pay-title {
-          margin-bottom: 3px;
-          font-size: 22px;
-        }
-      }
-
-      @media (max-width: 380px) {
-        h1 {
-          font-size: 23px;
-        }
-
-        .sentence {
+        .derived-pill {
+          margin-left: 4px;
           font-size: 15px;
         }
 
-        input[type="number"] {
-          width: 50px;
+        .result-card {
+          padding: 20px 16px;
         }
 
-        .num-short {
-          width: 36px !important;
+        .result-grid {
+          gap: 10px;
         }
 
-        .pay-card strong {
-          font-size: 24px;
+        .result-box {
+          min-height: 100px;
+          padding: 14px;
+        }
+
+        .result-box span {
+          font-size: 15px;
         }
       }
 
-      @media (max-width: 430px) {
-        .people-row:not(.equal) {
+      @media (max-width: 390px) {
+        .input-row {
+          font-size: 16px;
+        }
+
+        .inline-input {
+          width: 50px;
+          font-size: 16px;
+        }
+
+        .inline-input.short {
+          width: 38px;
+        }
+
+        .result-grid:not(.equal) {
           grid-template-columns: 1fr;
-          gap: 5px;
-        }
-
-        .mode-btn {
-          min-height: 38px;
-          font-size: 13px;
-        }
-
-        .breakdown .row:last-child {
-          align-items: flex-start;
-        }
-
-        .breakdown .row:last-child strong {
-          max-width: 66%;
         }
       }
     </style>
   </head>
   <body>
-    <main class="app">
-      <section class="panel controls">
-        <header class="hero">
-          <div>
-            <p class="eyebrow">AA SETTLEMENT CONSOLE</p>
-            <h1>羽毛球结算台</h1>
-          </div>
-          <div class="status">实时计算中</div>
-        </header>
-
-        <div class="form-grid">
-          <div class="mode-switch" aria-label="分摊模式">
-            <button class="mode-btn" id="equalModeBtn" type="button">男女平等</button>
-            <button class="mode-btn active" id="halfModeBtn" type="button">女生球费减半</button>
-          </div>
-
-          <section class="group">
-            <div class="sentence">
-              <span>场地：</span>
-              <input class="num-short" id="courtCount" type="number" min="0" max="999" step="1" />
-              <span>小时场地，</span>
-              <input id="hourlyPrice" type="number" min="0" max="999" step="1" />
-              <span>元/时，共</span>
-              <div class="derived-card">
-                <strong id="courtTotalPreview">180 元</strong>
-              </div>
-            </div>
-          </section>
-
-          <section class="group">
-            <div class="sentence">
-              <span>球费：</span>
-              <input id="tubePrice" type="number" min="0" max="999" step="1" />
-              <span>元/桶，用</span>
-              <input class="num-short" id="usedBalls" type="number" min="0" max="999" step="1" />
-              <span>个，共</span>
-              <div class="derived-card">
-                <strong id="ballTotalPreview">90 元</strong>
-              </div>
-            </div>
-          </section>
-
-          <section class="group">
-            <div class="people-row" id="peopleRow">
-              <div class="sentence">
-                <span id="peoplePrimaryLabel">男生：</span>
-                <span class="male-person-label"></span>
-                <input class="num-short" id="maleCount" type="number" min="0" max="999" step="1" />
-                <span>人</span>
-              </div>
-              <div class="sentence female-person">
-                <span>女生：</span>
-                <input class="num-short" id="femaleCount" type="number" min="0" max="999" step="1" />
-                <span>人</span>
-              </div>
-            </div>
-          </section>
+    <main class="page">
+      <section class="hero">
+        <h1>羽毛球活动收款</h1>
+        <div class="main-amount">
+          <span class="amount-label" id="mainAmountLabel">男生 / 女生</span>
+          <strong class="amount-value" id="mainAmountText">¥0</strong>
         </div>
+        <p class="amount-tip">填写人数和费用后自动计算应付金额</p>
       </section>
 
-      <aside class="panel dashboard" aria-live="polite">
-        <section class="total-card">
-          <div class="metric-label">活动总计</div>
-          <div class="total-value" id="grandTotalText">270 元</div>
-        </section>
-
-        <section class="pay-grid" id="payGrid">
-          <div class="pay-card male" id="malePayCard">
-            <span class="metric-label" id="malePayLabel">男生每人</span>
-            <strong id="malePayText">29.25 元</strong>
+      <section class="content">
+        <section class="card qr-card">
+          <div class="pay-recommend">
+            <span class="wechat-dot">微</span>
+            <span>推荐使用微信支付</span>
           </div>
-          <div class="pay-card female" id="femalePayCard">
-            <span class="metric-label">女生每人</span>
-            <strong id="femalePayText">23.63 元</strong>
-          </div>
-        </section>
-
-        <section class="breakdown">
-          <div class="row">
-            <span>场地费</span>
-            <strong id="courtLine">180 元</strong>
-          </div>
-          <div class="row">
-            <span>球费</span>
-            <strong id="ballLine">90 元</strong>
-          </div>
-          <div class="row">
-            <span>人数</span>
-            <strong id="peopleLine">男生 6 人，女生 4 人</strong>
-          </div>
-          <div class="row">
-            <span>规则</span>
-            <strong id="ruleLine">场地全员 AA，女生球费减半</strong>
-          </div>
-        </section>
-
-        <section class="qr-section" aria-label="二维码付款">
           <label class="qr-box" id="qrBox" title="点击上传收款二维码">
             <span class="qr-placeholder"></span>
             <img id="qrPreview" alt="收款二维码" />
             <input id="qrInput" type="file" accept="image/*" />
           </label>
-          <div>
-            <p class="pay-title">扫码付款</p>
-            <p class="pay-sub">点击二维码区域可替换收款码<br />使用网址：AA.cn.MyOS.run</p>
+          <p class="qr-tip">长按识别二维码付款</p>
+        </section>
+
+        <section class="card mode-card">
+          <div class="mode-switch" aria-label="分摊模式">
+            <button class="mode-btn" id="equalModeBtn" type="button">男女平等</button>
+            <button class="mode-btn active" id="halfModeBtn" type="button">女生球费减半</button>
           </div>
         </section>
-      </aside>
+
+        <section class="card form-card">
+          <div class="input-row">
+            <span>场地：</span>
+            <input class="inline-input short" id="courtCount" type="number" min="0" max="999" step="1" />
+            <span>小时场地，</span>
+            <input class="inline-input" id="hourlyPrice" type="number" min="0" max="999" step="1" />
+            <span>元/时，共</span>
+            <span class="derived-pill" id="courtTotalPreview">0 元</span>
+          </div>
+
+          <div class="input-row">
+            <span>球费：</span>
+            <input class="inline-input" id="tubePrice" type="number" min="0" max="999" step="1" />
+            <span>元/桶，用</span>
+            <input class="inline-input short" id="usedBalls" type="number" min="0" max="999" step="1" />
+            <span>个，共</span>
+            <span class="derived-pill" id="ballTotalPreview">0 元</span>
+          </div>
+
+          <div class="input-row people-row" id="peopleRow">
+            <span id="peoplePrimaryLabel">男生：</span>
+            <input class="inline-input short" id="maleCount" type="number" min="0" max="999" step="1" />
+            <span>人</span>
+            <span class="female-person">女生：</span>
+            <input class="inline-input short female-person" id="femaleCount" type="number" min="0" max="999" step="1" />
+            <span class="female-person">人</span>
+          </div>
+        </section>
+
+        <section class="card result-card">
+          <div class="result-head">
+            <h2 class="result-title">费用结果</h2>
+            <span class="auto-badge">自动计算</span>
+          </div>
+          <div class="result-grid" id="payGrid">
+            <div class="result-box" id="malePayCard">
+              <span id="malePayLabel">男生每人</span>
+              <strong id="malePayText">¥0</strong>
+            </div>
+            <div class="result-box" id="femalePayCard">
+              <span>女生每人</span>
+              <strong id="femalePayText">¥0</strong>
+            </div>
+          </div>
+        </section>
+
+        <footer class="footer">微信支付</footer>
+
+        <section class="generate-action">
+          <button class="generate-btn" id="generateImageBtn" type="button">生成图片</button>
+        </section>
+      </section>
     </main>
+
+    <section class="image-preview" id="imagePreview" aria-label="生成的收款图片">
+      <button class="preview-close" id="closePreviewBtn" type="button">关闭预览</button>
+      <img id="generatedImage" alt="生成的羽毛球活动收款图片" />
+      <p>长按图片保存，或转发到微信群</p>
+    </section>
 
     <script>
       const fields = {
@@ -803,7 +620,8 @@
       };
 
       const output = {
-        grandTotalText: document.getElementById("grandTotalText"),
+        mainAmountLabel: document.getElementById("mainAmountLabel"),
+        mainAmountText: document.getElementById("mainAmountText"),
         peopleRow: document.getElementById("peopleRow"),
         peoplePrimaryLabel: document.getElementById("peoplePrimaryLabel"),
         payGrid: document.getElementById("payGrid"),
@@ -814,22 +632,14 @@
         femalePayText: document.getElementById("femalePayText"),
         courtTotalPreview: document.getElementById("courtTotalPreview"),
         ballTotalPreview: document.getElementById("ballTotalPreview"),
-        courtLine: document.getElementById("courtLine"),
-        ballLine: document.getElementById("ballLine"),
-        peopleLine: document.getElementById("peopleLine"),
-        ruleLine: document.getElementById("ruleLine"),
       };
+
+      const generateImageBtn = document.getElementById("generateImageBtn");
+      const imagePreview = document.getElementById("imagePreview");
+      const closePreviewBtn = document.getElementById("closePreviewBtn");
+      const generatedImage = document.getElementById("generatedImage");
 
       let splitMode = "half";
-
-      const defaults = {
-        courtCount: 2,
-        hourlyPrice: 45,
-        tubePrice: 90,
-        usedBalls: 12,
-        maleCount: 6,
-        femaleCount: 4,
-      };
 
       function numberValue(input) {
         const value = Number(input.value);
@@ -839,6 +649,10 @@
       function money(value) {
         if (!Number.isFinite(value)) return "0";
         return Number.isInteger(value) ? String(value) : value.toFixed(2);
+      }
+
+      function yuan(value) {
+        return `¥${money(value)}`;
       }
 
       function calculate() {
@@ -861,22 +675,23 @@
         const femalePay = courtEach + femaleBallEach;
         const equalPay = peopleCount > 0 ? grandTotal / peopleCount : 0;
 
-        output.grandTotalText.textContent = `${money(grandTotal)} 元`;
+        output.courtTotalPreview.textContent = `${money(courtTotal)} 元`;
+        output.ballTotalPreview.textContent = `${money(ballTotal)} 元`;
         output.peopleRow.classList.toggle("equal", splitMode === "equal");
         output.peoplePrimaryLabel.textContent = splitMode === "equal" ? "人数：" : "男生：";
         output.payGrid.classList.toggle("equal", splitMode === "equal");
         output.femalePayCard.classList.toggle("hidden", splitMode === "equal");
-        output.malePayLabel.textContent = splitMode === "equal" ? "每人付款" : "男生每人";
-        output.malePayText.textContent = `${money(splitMode === "equal" ? equalPay : malePay)} 元`;
-        output.femalePayText.textContent = `${money(femalePay)} 元`;
-        output.courtTotalPreview.textContent = `${money(courtTotal)} 元`;
-        output.ballTotalPreview.textContent = `${money(ballTotal)} 元`;
-        output.courtLine.textContent = `${money(courtTotal)} 元`;
-        output.ballLine.textContent = `${money(ballTotal)} 元`;
-        output.peopleLine.textContent =
-          splitMode === "equal" ? `${money(peopleCount)} 人` : `男生 ${money(maleCount)} 人，女生 ${money(femaleCount)} 人`;
-        output.ruleLine.textContent =
-          splitMode === "half" ? "场地全员 AA，女生球费减半" : "场地和球费全员 AA";
+        output.malePayLabel.textContent = splitMode === "equal" ? "每人应付" : "男生每人";
+        output.malePayText.textContent = yuan(splitMode === "equal" ? equalPay : malePay);
+        output.femalePayText.textContent = yuan(femalePay);
+
+        if (splitMode === "equal") {
+          output.mainAmountLabel.textContent = "";
+          output.mainAmountText.textContent = `${yuan(equalPay)} 人均`;
+        } else {
+          output.mainAmountLabel.textContent = "男 / 女";
+          output.mainAmountText.textContent = `${yuan(malePay)} / ${yuan(femalePay)}`;
+        }
       }
 
       function setMode(nextMode) {
@@ -893,19 +708,192 @@
       modeButtons.equal.addEventListener("click", () => setMode("equal"));
       modeButtons.half.addEventListener("click", () => setMode("half"));
 
-      Object.entries(defaults).forEach(([key, value]) => {
-        fields[key].value = value;
-      });
       calculate();
 
       document.getElementById("qrInput").addEventListener("change", (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
+        const reader = new FileReader();
         const preview = document.getElementById("qrPreview");
         const box = document.getElementById("qrBox");
-        preview.src = URL.createObjectURL(file);
-        box.classList.add("has-image");
+        reader.addEventListener("load", () => {
+          preview.src = reader.result;
+          box.classList.add("has-image");
+        });
+        reader.readAsDataURL(file);
+      });
+
+      async function generateReceiptImage() {
+        const canvas = await renderReceiptCanvas();
+        generatedImage.src = canvas.toDataURL("image/png");
+        imagePreview.classList.add("show");
+      }
+
+      function drawRoundRect(ctx, x, y, width, height, radius, fillStyle) {
+        const r = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + width, y, x + width, y + height, r);
+        ctx.arcTo(x + width, y + height, x, y + height, r);
+        ctx.arcTo(x, y + height, x, y, r);
+        ctx.arcTo(x, y, x + width, y, r);
+        ctx.closePath();
+        ctx.fillStyle = fillStyle;
+        ctx.fill();
+      }
+
+      function drawText(ctx, text, x, y, size, color, weight = 700, align = "left") {
+        ctx.fillStyle = color;
+        ctx.font = `${weight} ${size}px "PingFang SC", "Microsoft YaHei", Arial`;
+        ctx.textAlign = align;
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, x, y);
+      }
+
+      function readImage(src) {
+        return new Promise((resolve) => {
+          if (!src) {
+            resolve(null);
+            return;
+          }
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => resolve(null);
+          image.src = src;
+        });
+      }
+
+      function drawPlaceholderQr(ctx, x, y, size) {
+        drawRoundRect(ctx, x, y, size, size, 18, "#f7faf9");
+        ctx.fillStyle = "#63aaf3";
+        ctx.fillRect(x + 18, y + 18, size - 36, size - 36);
+        ctx.fillStyle = "#5bc16c";
+        ctx.beginPath();
+        ctx.moveTo(x + 18, y + size * 0.48);
+        ctx.lineTo(x + size - 18, y + size * 0.72);
+        ctx.lineTo(x + size - 18, y + size - 18);
+        ctx.lineTo(x + 18, y + size - 18);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(x + 18, y + size * 0.36);
+        ctx.lineTo(x + size * 0.5, y + size * 0.58);
+        ctx.lineTo(x + size - 18, y + size * 0.45);
+        ctx.lineTo(x + size * 0.5, y + size * 0.68);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#d8dcdf";
+        ctx.beginPath();
+        ctx.arc(x + size * 0.72, y + size * 0.27, size * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      async function renderReceiptCanvas() {
+        const w = 750;
+        const h = 1320;
+        const scale = 2;
+        const canvas = document.createElement("canvas");
+        canvas.width = w * scale;
+        canvas.height = h * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(scale, scale);
+
+        const courtCount = fields.courtCount.value || "";
+        const hourlyPrice = fields.hourlyPrice.value || "";
+        const tubePrice = fields.tubePrice.value || "";
+        const usedBalls = fields.usedBalls.value || "";
+        const maleCount = fields.maleCount.value || "";
+        const femaleCount = fields.femaleCount.value || "";
+        const courtTotal = numberValue(fields.courtCount) * numberValue(fields.hourlyPrice);
+        const ballTotal = (numberValue(fields.tubePrice) / 12) * numberValue(fields.usedBalls);
+        const peopleCount = splitMode === "equal" ? numberValue(fields.maleCount) : numberValue(fields.maleCount) + numberValue(fields.femaleCount);
+        const ballUnits = splitMode === "half" ? numberValue(fields.maleCount) + numberValue(fields.femaleCount) * 0.5 : peopleCount;
+        const courtEach = peopleCount > 0 ? courtTotal / peopleCount : 0;
+        const maleBallEach = ballUnits > 0 ? ballTotal / ballUnits : 0;
+        const femaleBallEach = splitMode === "half" ? maleBallEach * 0.5 : maleBallEach;
+        const grandTotal = courtTotal + ballTotal;
+        const malePay = courtEach + maleBallEach;
+        const femalePay = courtEach + femaleBallEach;
+        const equalPay = peopleCount > 0 ? grandTotal / peopleCount : 0;
+        const mainLabel = splitMode === "equal" ? "" : "男 / 女";
+        const mainAmount = splitMode === "equal" ? `${yuan(equalPay)} 人均` : `${yuan(malePay)} / ${yuan(femalePay)}`;
+
+        ctx.fillStyle = "#f5f6f7";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = "#07c160";
+        ctx.fillRect(0, 0, w, 420);
+        drawText(ctx, "羽毛球活动收款", w / 2, 70, 44, "#fff", 900, "center");
+        if (mainLabel) {
+          drawText(ctx, mainLabel, w / 2, 160, 26, "#fff", 800, "center");
+        }
+        drawText(ctx, mainAmount, w / 2, 230, mainAmount.length > 8 ? 54 : 78, "#fff", 900, "center");
+        drawText(ctx, "填写人数和费用后自动计算应付金额", w / 2, 326, 20, "rgba(255,255,255,0.84)", 700, "center");
+
+        drawRoundRect(ctx, 32, 360, w - 64, 330, 28, "#fff");
+        drawRoundRect(ctx, 254, 392, 42, 42, 21, "#07c160");
+        drawText(ctx, "微", 275, 414, 22, "#fff", 900, "center");
+        drawText(ctx, "推荐使用微信支付", 318, 414, 25, "#17191d", 900);
+        const qrSize = Math.round((w - 64) * 3 / 7);
+        const qrX = (w - qrSize) / 2;
+        const qrY = 462;
+        drawRoundRect(ctx, qrX - 12, qrY - 12, qrSize + 24, qrSize + 24, 18, "#fff");
+        ctx.strokeStyle = "#edf0f2";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(qrX - 12, qrY - 12, qrSize + 24, qrSize + 24);
+        const qrImage = await readImage(document.getElementById("qrPreview").src);
+        if (qrImage) {
+          ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+        } else {
+          drawPlaceholderQr(ctx, qrX, qrY, qrSize);
+        }
+        drawText(ctx, "长按识别二维码付款", w / 2, 650, 18, "#8b9098", 700, "center");
+
+        drawRoundRect(ctx, 32, 720, w - 64, 166, 22, "#fff");
+        drawText(ctx, `场地：${courtCount || "__"} 小时场地，${hourlyPrice || "__"} 元/时，共 ${money(courtTotal)} 元`, 58, 763, 22, "#17191d", 800);
+        drawText(ctx, `球费：${tubePrice || "__"} 元/桶，用 ${usedBalls || "__"} 个，共 ${money(ballTotal)} 元`, 58, 818, 22, "#17191d", 800);
+        const peopleText = splitMode === "equal"
+          ? `人数：${maleCount || "__"} 人`
+          : `男生：${maleCount || "__"} 人    女生：${femaleCount || "__"} 人`;
+        drawText(ctx, peopleText, 58, 873, 22, "#17191d", 800);
+
+        drawRoundRect(ctx, 32, 914, w - 64, 230, 22, "#fff");
+        drawText(ctx, "费用结果", 58, 960, 25, "#17191d", 900);
+        drawRoundRect(ctx, 604, 934, 96, 36, 18, "#dff8e9");
+        drawText(ctx, "自动计算", 652, 953, 16, "#05a957", 900, "center");
+        if (splitMode === "equal") {
+          drawRoundRect(ctx, 58, 988, w - 116, 116, 18, "#f6f7f8");
+          drawText(ctx, "每人应付", w / 2, 1023, 20, "#8b9098", 700, "center");
+          drawText(ctx, yuan(equalPay), w / 2, 1070, 46, "#17191d", 900, "center");
+        } else {
+          drawRoundRect(ctx, 58, 988, 300, 116, 18, "#f6f7f8");
+          drawRoundRect(ctx, 392, 988, 300, 116, 18, "#f6f7f8");
+          drawText(ctx, "男生每人", 208, 1023, 20, "#8b9098", 700, "center");
+          drawText(ctx, yuan(malePay), 208, 1070, 42, "#17191d", 900, "center");
+          drawText(ctx, "女生每人", 542, 1023, 20, "#8b9098", 700, "center");
+          drawText(ctx, yuan(femalePay), 542, 1070, 42, "#17191d", 900, "center");
+        }
+        drawText(ctx, "微信支付", w / 2, 1200, 20, "#7a8088", 500, "center");
+        return canvas;
+      }
+
+      generateImageBtn.addEventListener("click", async () => {
+        generateImageBtn.disabled = true;
+        generateImageBtn.textContent = "生成中...";
+        try {
+          await generateReceiptImage();
+          generateImageBtn.textContent = "重新生成图片";
+        } catch (error) {
+          alert(error.message);
+          generateImageBtn.textContent = "生成图片";
+        } finally {
+          generateImageBtn.disabled = false;
+        }
+      });
+
+      closePreviewBtn.addEventListener("click", () => {
+        imagePreview.classList.remove("show");
       });
     </script>
   </body>
