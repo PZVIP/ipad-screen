@@ -143,7 +143,7 @@
         display: block;
         width: 55.55%; /* 占页面宽度的 5/9 */
         min-width: 160px;
-        aspect-ratio: 294 / 400; /* 长宽比 294:400 */
+        aspect-ratio: 825 / 880; /* 长宽比 825:880 */
         margin: 0 auto;
         border: 1px solid var(--line);
         border-radius: 18px;
@@ -154,8 +154,8 @@
 
       .qr-placeholder {
         position: absolute;
-        inset: 10px;
-        border-radius: 12px;
+        inset: 0;
+        border-radius: 0;
         background:
           radial-gradient(circle at 73% 20%, #d5d9dc 0 9%, transparent 9.5%),
           linear-gradient(33deg, #07c160 0 43%, transparent 43.5%),
@@ -166,10 +166,12 @@
 
       .qr-box img {
         position: absolute;
-        inset: 0;
+        top: 0;
+        left: 0;
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: auto;
+        object-fit: contain;
+        object-position: top left;
         display: none;
         background: #fff;
       }
@@ -885,11 +887,28 @@
 
         // 3. 补绘二维码
         if (originalImg && originalImg.naturalWidth > 0) {
-          const qrRect = originalImg.getBoundingClientRect();
+          const qrBox = document.getElementById("qrBox");
+          const qrRect = qrBox.getBoundingClientRect();
           const pageRect = page.getBoundingClientRect();
+
           const x = qrRect.left - pageRect.left;
           const y = qrRect.top - pageRect.top;
-          ctx.drawImage(originalImg, x, y, qrRect.width, qrRect.height);
+          const w = qrRect.width;
+          const h = qrRect.height;
+
+          // 按照 CSS 逻辑：宽度 100% (w)，高度按比例缩放
+          const imgAspect = originalImg.naturalWidth / originalImg.naturalHeight;
+          const drawW = w;
+          const drawH = w / imgAspect;
+
+          ctx.save();
+          // 创建裁剪区域 (qr-box 的范围)
+          ctx.beginPath();
+          ctx.rect(x, y, w, h);
+          ctx.clip();
+          // 从左上角 (x, y) 开始绘制，模拟 object-fit: contain; object-position: top left;
+          ctx.drawImage(originalImg, x, y, drawW, drawH);
+          ctx.restore();
         }
 
         // 4. 处理导出
@@ -910,7 +929,8 @@
 
       // 新增：DOM 预览模式，直接把 Canvas 和原始二维码叠加显示
       function showDomPreview(canvas, originalImg) {
-        const qrRect = originalImg.getBoundingClientRect();
+        const qrBox = document.getElementById("qrBox");
+        const qrRect = qrBox.getBoundingClientRect();
         const pageRect = document.querySelector(".page").getBoundingClientRect();
         
         // 创建一个临时的容器来承载最终画面
@@ -922,21 +942,28 @@
         container.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
         
         // 底层是渲染好的文字内容（Canvas）
-        // 关键：此时 canvas 已被污染，不能 toDataURL。
-        // 但我们可以直接使用这个 canvas 元素本身！
         canvas.style.width = "100%";
         canvas.style.height = "100%";
         container.appendChild(canvas);
         
-        // 顶层覆盖一个真实的图片元素（绕过安全限制）
-        const qrOverlay = new Image();
-        qrOverlay.src = originalImg.src;
-        qrOverlay.style.position = "absolute";
-        qrOverlay.style.left = `${qrRect.left - pageRect.left}px`;
-        qrOverlay.style.top = `${qrRect.top - pageRect.top}px`;
-        qrOverlay.style.width = `${qrRect.width}px`;
-        qrOverlay.style.height = `${qrRect.height}px`;
-        container.appendChild(qrOverlay);
+        // 顶层覆盖一个模拟 .qr-box 的容器（绕过安全限制）
+        const qrOverlayContainer = document.createElement("div");
+        qrOverlayContainer.style.position = "absolute";
+        qrOverlayContainer.style.left = `${qrRect.left - pageRect.left}px`;
+        qrOverlayContainer.style.top = `${qrRect.top - pageRect.top}px`;
+        qrOverlayContainer.style.width = `${qrRect.width}px`;
+        qrOverlayContainer.style.height = `${qrRect.height}px`;
+        qrOverlayContainer.style.overflow = "hidden";
+        qrOverlayContainer.style.background = "#fff";
+        
+        const qrOverlayImg = new Image();
+        qrOverlayImg.src = originalImg.src;
+        qrOverlayImg.style.width = "100%";
+        qrOverlayImg.style.height = "auto";
+        qrOverlayImg.style.display = "block";
+        
+        qrOverlayContainer.appendChild(qrOverlayImg);
+        container.appendChild(qrOverlayContainer);
         
         // 清空并更新预览区域
         const imagePreview = document.getElementById("imagePreview");
