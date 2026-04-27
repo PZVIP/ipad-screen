@@ -46,7 +46,7 @@
       }
 
       .hero {
-        padding: 22px 22px 76px;
+        padding: 32px 22px 76px;
         color: #fff;
         text-align: center;
         background: linear-gradient(180deg, #14d56f 0%, var(--wechat) 100%);
@@ -54,10 +54,11 @@
 
       h1 {
         margin: 0;
-        font-size: clamp(30px, 6vw, 44px);
-        line-height: 1.08;
-        font-weight: 900;
-        letter-spacing: 0;
+        font-size: clamp(24px, 5vw, 32px);
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        opacity: 0.95;
       }
 
       .main-amount {
@@ -140,9 +141,9 @@
       .qr-box {
         position: relative;
         display: block;
-        width: 44.4%; /* 占页面宽度的 4/9 */
-        min-width: 140px;
-        aspect-ratio: 1;
+        width: 55.55%; /* 占页面宽度的 5/9 */
+        min-width: 160px;
+        aspect-ratio: 294 / 400; /* 长宽比 294:400 */
         margin: 0 auto;
         border: 1px solid var(--line);
         border-radius: 18px;
@@ -517,8 +518,8 @@
         }
 
         .qr-box {
-          width: 44.4%;
-          min-width: 130px;
+          width: 55.55%;
+          min-width: 150px;
         }
 
         .input-row {
@@ -607,15 +608,11 @@
 
       <section class="content">
         <section class="card qr-card">
-          <div class="pay-recommend">
-            <span>请使用微信支付</span>
-          </div>
           <label class="qr-box has-image" id="qrBox" title="点击切换收款二维码">
             <span class="qr-placeholder"></span>
             <img id="qrPreview" src="qr.png" alt="收款二维码" />
             <input id="qrInput" type="file" accept="image/*" />
           </label>
-          <p class="qr-tip">长按识别二维码付款</p>
         </section>
 
         <section class="card mode-card">
