@@ -119,24 +119,6 @@
         background: rgba(255, 255, 255, 0.035);
       }
 
-      .group-head {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-bottom: 12px;
-      }
-
-      .chip {
-        padding: 5px 8px;
-        border-radius: 999px;
-        color: var(--muted);
-        background: rgba(255, 255, 255, 0.06);
-        font-size: 12px;
-        font-weight: 800;
-        white-space: nowrap;
-      }
-
       .sentence {
         display: flex;
         align-items: baseline;
@@ -150,10 +132,46 @@
         white-space: nowrap;
       }
 
+      .mode-switch {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 5px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .mode-btn {
+        min-height: 42px;
+        border: 0;
+        border-radius: 10px;
+        color: var(--muted);
+        background: transparent;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .mode-btn.active {
+        color: var(--text);
+        background: linear-gradient(135deg, rgba(40, 224, 196, 0.2), rgba(66, 165, 255, 0.16));
+        box-shadow: inset 0 0 0 1px rgba(40, 224, 196, 0.24);
+      }
+
       .people-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 16px;
+      }
+
+      .people-row.equal {
+        grid-template-columns: 1fr;
+      }
+
+      .people-row.equal .female-person,
+      .people-row.equal .male-person-label {
+        display: none;
       }
 
       input[type="number"] {
@@ -250,6 +268,10 @@
         gap: 12px;
       }
 
+      .pay-grid.equal {
+        grid-template-columns: 1fr;
+      }
+
       .pay-card {
         min-height: 126px;
         padding: 16px;
@@ -267,6 +289,10 @@
       .pay-card.female {
         border: 1px solid rgba(255, 158, 87, 0.28);
         background: var(--orange-soft);
+      }
+
+      .pay-card.hidden {
+        display: none;
       }
 
       .pay-card strong {
@@ -515,11 +541,6 @@
           margin-bottom: 5px;
         }
 
-        .chip {
-          padding: 4px 7px;
-          font-size: 11px;
-        }
-
         .sentence {
           flex-wrap: wrap;
           column-gap: 0;
@@ -549,6 +570,10 @@
         .people-row {
           grid-template-columns: 1fr 1fr;
           min-width: 0;
+        }
+
+        .people-row.equal {
+          grid-template-columns: 1fr;
         }
 
         .total-card {
@@ -631,15 +656,14 @@
       }
 
       @media (max-width: 430px) {
-        .people-row {
+        .people-row:not(.equal) {
           grid-template-columns: 1fr;
           gap: 5px;
         }
 
-        .chip {
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        .mode-btn {
+          min-height: 38px;
+          font-size: 13px;
         }
 
         .breakdown .row:last-child {
@@ -664,10 +688,12 @@
         </header>
 
         <div class="form-grid">
+          <div class="mode-switch" aria-label="分摊模式">
+            <button class="mode-btn" id="equalModeBtn" type="button">男女平等</button>
+            <button class="mode-btn active" id="halfModeBtn" type="button">女生球费减半</button>
+          </div>
+
           <section class="group">
-            <div class="group-head">
-              <span class="chip">小时 × 单价</span>
-            </div>
             <div class="sentence">
               <span>场地：</span>
               <input class="num-short" id="courtCount" type="number" min="0" max="999" step="1" />
@@ -681,9 +707,6 @@
           </section>
 
           <section class="group">
-            <div class="group-head">
-              <span class="chip">12 个/桶</span>
-            </div>
             <div class="sentence">
               <span>球费：</span>
               <input id="tubePrice" type="number" min="0" max="999" step="1" />
@@ -697,16 +720,14 @@
           </section>
 
           <section class="group">
-            <div class="group-head">
-              <span class="chip">男 1 份 / 女 0.5 份</span>
-            </div>
-            <div class="people-row">
+            <div class="people-row" id="peopleRow">
               <div class="sentence">
-                <span>男生：</span>
+                <span id="peoplePrimaryLabel">男生：</span>
+                <span class="male-person-label"></span>
                 <input class="num-short" id="maleCount" type="number" min="0" max="999" step="1" />
                 <span>人</span>
               </div>
-              <div class="sentence">
+              <div class="sentence female-person">
                 <span>女生：</span>
                 <input class="num-short" id="femaleCount" type="number" min="0" max="999" step="1" />
                 <span>人</span>
@@ -722,12 +743,12 @@
           <div class="total-value" id="grandTotalText">270 元</div>
         </section>
 
-        <section class="pay-grid">
-          <div class="pay-card male">
-            <span class="metric-label">男生每人</span>
+        <section class="pay-grid" id="payGrid">
+          <div class="pay-card male" id="malePayCard">
+            <span class="metric-label" id="malePayLabel">男生每人</span>
             <strong id="malePayText">29.25 元</strong>
           </div>
-          <div class="pay-card female">
+          <div class="pay-card female" id="femalePayCard">
             <span class="metric-label">女生每人</span>
             <strong id="femalePayText">23.63 元</strong>
           </div>
@@ -748,7 +769,7 @@
           </div>
           <div class="row">
             <span>规则</span>
-            <strong>场地全员 AA，女生球费减半</strong>
+            <strong id="ruleLine">场地全员 AA，女生球费减半</strong>
           </div>
         </section>
 
@@ -776,8 +797,19 @@
         femaleCount: document.getElementById("femaleCount"),
       };
 
+      const modeButtons = {
+        equal: document.getElementById("equalModeBtn"),
+        half: document.getElementById("halfModeBtn"),
+      };
+
       const output = {
         grandTotalText: document.getElementById("grandTotalText"),
+        peopleRow: document.getElementById("peopleRow"),
+        peoplePrimaryLabel: document.getElementById("peoplePrimaryLabel"),
+        payGrid: document.getElementById("payGrid"),
+        malePayCard: document.getElementById("malePayCard"),
+        femalePayCard: document.getElementById("femalePayCard"),
+        malePayLabel: document.getElementById("malePayLabel"),
         malePayText: document.getElementById("malePayText"),
         femalePayText: document.getElementById("femalePayText"),
         courtTotalPreview: document.getElementById("courtTotalPreview"),
@@ -785,7 +817,10 @@
         courtLine: document.getElementById("courtLine"),
         ballLine: document.getElementById("ballLine"),
         peopleLine: document.getElementById("peopleLine"),
+        ruleLine: document.getElementById("ruleLine"),
       };
+
+      let splitMode = "half";
 
       const defaults = {
         courtCount: 2,
@@ -815,27 +850,48 @@
         const femaleCount = numberValue(fields.femaleCount);
         const courtTotal = courtCount * hourlyPrice;
         const ballTotal = (tubePrice / 12) * usedBalls;
-        const peopleCount = maleCount + femaleCount;
-        const ballUnits = maleCount + femaleCount * 0.5;
+        const peopleCount = splitMode === "equal" ? maleCount : maleCount + femaleCount;
+        const ballUnits = splitMode === "half" ? maleCount + femaleCount * 0.5 : peopleCount;
 
         const courtEach = peopleCount > 0 ? courtTotal / peopleCount : 0;
         const maleBallEach = ballUnits > 0 ? ballTotal / ballUnits : 0;
-        const femaleBallEach = maleBallEach * 0.5;
+        const femaleBallEach = splitMode === "half" ? maleBallEach * 0.5 : maleBallEach;
         const grandTotal = courtTotal + ballTotal;
+        const malePay = courtEach + maleBallEach;
+        const femalePay = courtEach + femaleBallEach;
+        const equalPay = peopleCount > 0 ? grandTotal / peopleCount : 0;
 
         output.grandTotalText.textContent = `${money(grandTotal)} 元`;
-        output.malePayText.textContent = `${money(courtEach + maleBallEach)} 元`;
-        output.femalePayText.textContent = `${money(courtEach + femaleBallEach)} 元`;
+        output.peopleRow.classList.toggle("equal", splitMode === "equal");
+        output.peoplePrimaryLabel.textContent = splitMode === "equal" ? "人数：" : "男生：";
+        output.payGrid.classList.toggle("equal", splitMode === "equal");
+        output.femalePayCard.classList.toggle("hidden", splitMode === "equal");
+        output.malePayLabel.textContent = splitMode === "equal" ? "每人付款" : "男生每人";
+        output.malePayText.textContent = `${money(splitMode === "equal" ? equalPay : malePay)} 元`;
+        output.femalePayText.textContent = `${money(femalePay)} 元`;
         output.courtTotalPreview.textContent = `${money(courtTotal)} 元`;
         output.ballTotalPreview.textContent = `${money(ballTotal)} 元`;
         output.courtLine.textContent = `${money(courtTotal)} 元`;
         output.ballLine.textContent = `${money(ballTotal)} 元`;
-        output.peopleLine.textContent = `男生 ${money(maleCount)} 人，女生 ${money(femaleCount)} 人`;
+        output.peopleLine.textContent =
+          splitMode === "equal" ? `${money(peopleCount)} 人` : `男生 ${money(maleCount)} 人，女生 ${money(femaleCount)} 人`;
+        output.ruleLine.textContent =
+          splitMode === "half" ? "场地全员 AA，女生球费减半" : "场地和球费全员 AA";
+      }
+
+      function setMode(nextMode) {
+        splitMode = nextMode;
+        modeButtons.equal.classList.toggle("active", splitMode === "equal");
+        modeButtons.half.classList.toggle("active", splitMode === "half");
+        calculate();
       }
 
       Object.values(fields).forEach((field) => {
         field.addEventListener("input", calculate);
       });
+
+      modeButtons.equal.addEventListener("click", () => setMode("equal"));
+      modeButtons.half.addEventListener("click", () => setMode("half"));
 
       Object.entries(defaults).forEach(([key, value]) => {
         fields[key].value = value;
