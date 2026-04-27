@@ -313,8 +313,9 @@
 
       .inline-input {
         width: 5ch;
-        height: 32px;
+        height: auto;
         margin: 0 3px;
+        padding: 0;
         border: 0;
         border-bottom: 2px solid #d7dde1;
         border-radius: 0;
@@ -325,6 +326,7 @@
         font-weight: 400;
         text-align: center;
         appearance: textfield;
+        vertical-align: baseline;
       }
 
       .inline-input:focus {
@@ -832,13 +834,19 @@
         }
 
         clone.querySelectorAll("input").forEach((input) => {
+          // 获取原始输入框的显示状态
+          const originalInput = page.querySelector(`#${input.id}`);
+          const isHidden = originalInput && window.getComputedStyle(originalInput).display === 'none';
+          
           const span = document.createElement("span");
           span.textContent = input.value || "0";
           span.className = input.className;
           span.style.borderBottom = "1px solid #ddd";
-          span.style.display = "inline-block";
+          span.style.display = isHidden ? "none" : "inline-block";
           span.style.minWidth = "4ch";
           span.style.textAlign = "center";
+          span.style.verticalAlign = "baseline";
+          span.style.lineHeight = "1";
           input.parentNode.replaceChild(span, input);
         });
 
