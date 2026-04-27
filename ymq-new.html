@@ -666,16 +666,15 @@
         <div class="form-grid">
           <section class="group">
             <div class="group-head">
-              <span class="chip">全员平摊</span>
+              <span class="chip">小时 × 单价</span>
             </div>
             <div class="sentence">
-              <span>场地费：</span>
+              <span>场地：</span>
               <input class="num-short" id="courtCount" type="number" min="0" max="999" step="1" />
-              <span>块场地，每小时</span>
+              <span>小时场地，</span>
               <input id="hourlyPrice" type="number" min="0" max="999" step="1" />
-              <span>元</span>
+              <span>元/时，共</span>
               <div class="derived-card">
-                <span>场地费用</span>
                 <strong id="courtTotalPreview">180 元</strong>
               </div>
             </div>
@@ -683,16 +682,15 @@
 
           <section class="group">
             <div class="group-head">
-              <span class="chip">每桶 12 个</span>
+              <span class="chip">12 个/桶</span>
             </div>
             <div class="sentence">
               <span>球费：</span>
               <input id="tubePrice" type="number" min="0" max="999" step="1" />
-              <span>元/桶，每桶 12 个，共用</span>
+              <span>元/桶，用</span>
               <input class="num-short" id="usedBalls" type="number" min="0" max="999" step="1" />
-              <span>个</span>
+              <span>个，共</span>
               <div class="derived-card">
-                <span>球费</span>
                 <strong id="ballTotalPreview">90 元</strong>
               </div>
             </div>
