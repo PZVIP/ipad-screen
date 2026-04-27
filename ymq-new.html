@@ -276,32 +276,36 @@
         padding: 12px 24px;
         background: #fdfdfd;
         border-top: 1px dashed var(--line);
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
       }
 
       .summary-detail-row {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
         align-items: baseline;
-        font-size: 14px;
+        font-size: 13px;
         color: var(--muted);
+        flex-wrap: wrap;
+        gap: 8px;
       }
 
-      .summary-total {
-        margin-top: 4px;
-        padding-top: 8px;
-        border-top: 1px solid var(--line);
-        font-size: 16px;
+      .summary-total-inline {
         color: var(--text);
-        font-weight: 600;
+        font-weight: 500;
+        white-space: nowrap;
       }
 
-      .summary-total strong {
+      .summary-total-inline strong {
         color: #ff4d4f;
-        font-size: 20px;
-        margin-left: 4px;
+        font-size: 16px;
+        margin-left: 2px;
+      }
+
+      @media (max-width: 360px) {
+        .summary-detail-row {
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 4px;
+        }
       }
 
       .inline-input {
@@ -655,11 +659,9 @@
           </div>
 
           <div class="summary-detail">
-            <div class="summary-detail-row" id="summaryDetailText">
-              场地费 0 元 + 球费 0 元
-            </div>
-            <div class="summary-detail-row summary-total">
-              总计费用 <strong id="summaryTotalText">¥0</strong>
+            <div class="summary-detail-row">
+              <span id="summaryDetailText">场地费 0 元 + 球费 0 元</span>
+              <span class="summary-total-inline">总计 <strong id="summaryTotalText">¥0</strong></span>
             </div>
           </div>
         </section>
@@ -808,6 +810,15 @@
         const width = page.offsetWidth;
         const clone = page.cloneNode(true);
         clone.classList.add("capture-source");
+        // 关键：移除克隆节点的最小高度和底部间距，确保紧贴内容
+        clone.style.minHeight = "auto";
+        clone.style.paddingBottom = "20px"; // 只保留少许边距美观
+        clone.style.height = "auto";
+        
+        // 隐藏不需要出现在图片中的元素（如生成按钮区域）
+        const actionArea = clone.querySelector(".generate-action");
+        if (actionArea) actionArea.style.display = "none";
+
         const clonedImg = clone.querySelector("#qrPreview");
         
         // 只有 Base64 图片才放入 SVG 渲染，本地图片移除 src
@@ -837,7 +848,10 @@
         wrapper.appendChild(clone);
         document.body.appendChild(wrapper);
 
-        const height = Math.ceil(clone.scrollHeight);
+        // 使用 getBoundingClientRect 获取精确的内容高度
+        const contentHeight = clone.getBoundingClientRect().height;
+        const height = Math.ceil(contentHeight);
+        
         const css = Array.from(document.querySelectorAll("style"))
           .map((style) => style.textContent)
           .join("\n");
