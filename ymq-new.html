@@ -664,25 +664,6 @@
           </div>
         </section>
 
-        <section class="card result-card">
-          <div class="result-head">
-            <h2 class="result-title">费用结果</h2>
-            <span class="auto-badge">自动计算</span>
-          </div>
-          <div class="result-grid" id="payGrid">
-            <div class="result-box" id="malePayCard">
-              <span id="malePayLabel">男生每人</span>
-              <strong id="malePayText">¥0</strong>
-            </div>
-            <div class="result-box" id="femalePayCard">
-              <span>女生每人</span>
-              <strong id="femalePayText">¥0</strong>
-            </div>
-          </div>
-        </section>
-
-        <footer class="footer">微信支付</footer>
-
         <section class="generate-action">
           <button class="generate-btn" id="generateImageBtn" type="button">生成图片</button>
         </section>
@@ -713,12 +694,6 @@
       const output = {
         mainAmountText: document.getElementById("mainAmountText"),
         peopleRow: document.getElementById("peopleRow"),
-        payGrid: document.getElementById("payGrid"),
-        malePayCard: document.getElementById("malePayCard"),
-        femalePayCard: document.getElementById("femalePayCard"),
-        malePayLabel: document.getElementById("malePayLabel"),
-        malePayText: document.getElementById("malePayText"),
-        femalePayText: document.getElementById("femalePayText"),
         summaryDetailText: document.getElementById("summaryDetailText"),
         summaryTotalText: document.getElementById("summaryTotalText"),
       };
@@ -744,6 +719,21 @@
         return `¥${money(value)}`;
       }
 
+      // 页面加载完成后，处理默认二维码的显示状态
+      window.addEventListener('load', () => {
+        const qrImg = document.getElementById('qrPreview');
+        if (qrImg.src && !qrImg.src.startsWith('data:')) {
+          // 在本地 file:// 协议下，严禁对 img 进行任何 Canvas 转换操作
+          // 只要图片加载完成，我们就添加 has-image 类来显示它
+          if (qrImg.complete) {
+            document.querySelector('.qr-box').classList.add('has-image');
+          } else {
+            qrImg.onload = () => document.querySelector('.qr-box').classList.add('has-image');
+          }
+          console.log('检测到本地默认二维码，已就绪');
+        }
+      });
+
       function calculate() {
         const courtCount = numberValue(fields.courtCount);
         const hourlyPrice = numberValue(fields.hourlyPrice);
@@ -768,11 +758,6 @@
         output.summaryTotalText.textContent = yuan(grandTotal);
 
         output.peopleRow.classList.toggle("equal", splitMode === "equal");
-        output.payGrid.classList.toggle("equal", splitMode === "equal");
-        output.femalePayCard.classList.toggle("hidden", splitMode === "equal");
-        output.malePayLabel.textContent = splitMode === "equal" ? "每人应付" : "男生每人";
-        output.malePayText.textContent = yuan(splitMode === "equal" ? equalPay : malePay);
-        output.femalePayText.textContent = yuan(femalePay);
 
         if (splitMode === "equal") {
           output.mainAmountText.innerHTML = `<span class="amount-label-small">每人应付：</span>${yuan(equalPay)}`;
@@ -812,38 +797,37 @@
       });
 
       async function generateReceiptImage() {
-        const canvas = await renderCurrentPageCanvas();
-        generatedImage.src = canvas.toDataURL("image/png");
-        imagePreview.classList.add("show");
-      }
-
-      function readImage(src) {
-        return new Promise((resolve) => {
-          if (!src) {
-            resolve(null);
-            return;
-          }
-          const image = new Image();
-          image.onload = () => resolve(image);
-          image.onerror = () => resolve(null);
-          image.src = src;
-        });
-      }
-
-      async function renderCurrentPageCanvas() {
         const page = document.querySelector(".page");
+        const originalImg = document.getElementById("qrPreview");
+        
+        // 1. 核心改进：如果是本地图片，我们直接通过 img 标签预览，不再尝试导出 canvas
+        // 这样可以绕过 toDataURL 的安全报错
+        const isLocalFile = window.location.protocol === 'file:';
+        const isDefaultQR = originalImg.src && !originalImg.src.startsWith('data:');
+
+        const width = page.offsetWidth;
         const clone = page.cloneNode(true);
         clone.classList.add("capture-source");
-        clone.querySelectorAll("input").forEach((input) => {
-          if (input.type !== "file") {
-            input.setAttribute("value", input.value);
-          }
-        });
+        const clonedImg = clone.querySelector("#qrPreview");
+        
+        // 只有 Base64 图片才放入 SVG 渲染，本地图片移除 src
+        if (originalImg.src.startsWith("data:")) {
+          clonedImg.src = originalImg.src;
+        } else {
+          clonedImg.removeAttribute('src');
+          clonedImg.style.display = 'none';
+        }
 
-        const width = Math.ceil(page.offsetWidth);
-        clone.style.width = `${width}px`;
-        clone.style.minHeight = "auto";
-        clone.style.margin = "0";
+        clone.querySelectorAll("input").forEach((input) => {
+          const span = document.createElement("span");
+          span.textContent = input.value || "0";
+          span.className = input.className;
+          span.style.borderBottom = "1px solid #ddd";
+          span.style.display = "inline-block";
+          span.style.minWidth = "4ch";
+          span.style.textAlign = "center";
+          input.parentNode.replaceChild(span, input);
+        });
 
         const wrapper = document.createElement("div");
         wrapper.style.position = "fixed";
@@ -872,10 +856,10 @@
 
         const image = await readImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
         if (!image) {
-          throw new Error("图片生成失败，请稍后再试");
+          throw new Error("图片生成失败");
         }
 
-        const scale = Math.min(2, window.devicePixelRatio || 1);
+        const scale = 2; // 固定 2 倍清晰度
         const canvas = document.createElement("canvas");
         canvas.width = width * scale;
         canvas.height = height * scale;
@@ -884,8 +868,97 @@
         ctx.fillStyle = "#f5f6f7";
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(image, 0, 0, width, height);
-        return canvas;
+
+        // 3. 补绘二维码
+        if (originalImg && originalImg.naturalWidth > 0) {
+          const qrRect = originalImg.getBoundingClientRect();
+          const pageRect = page.getBoundingClientRect();
+          const x = qrRect.left - pageRect.left;
+          const y = qrRect.top - pageRect.top;
+          ctx.drawImage(originalImg, x, y, qrRect.width, qrRect.height);
+        }
+
+        // 4. 处理导出
+        try {
+          const dataUrl = canvas.toDataURL("image/png");
+          generatedImage.src = dataUrl;
+          imagePreview.classList.add("show");
+        } catch (e) {
+          console.error("Canvas 导出失败:", e);
+          if (isLocalFile && isDefaultQR) {
+            // 如果是因为本地默认二维码导致的污染，我们切换到“纯 DOM 预览”模式
+            showDomPreview(canvas, originalImg);
+          } else {
+            throw e;
+          }
+        }
       }
+
+      // 新增：DOM 预览模式，直接把 Canvas 和原始二维码叠加显示
+      function showDomPreview(canvas, originalImg) {
+        const qrRect = originalImg.getBoundingClientRect();
+        const pageRect = document.querySelector(".page").getBoundingClientRect();
+        
+        // 创建一个临时的容器来承载最终画面
+        const container = document.createElement("div");
+        container.style.position = "relative";
+        container.style.width = `${canvas.width / 2}px`;
+        container.style.height = `${canvas.height / 2}px`;
+        container.style.margin = "0 auto";
+        container.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+        
+        // 底层是渲染好的文字内容（Canvas）
+        // 关键：此时 canvas 已被污染，不能 toDataURL。
+        // 但我们可以直接使用这个 canvas 元素本身！
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        container.appendChild(canvas);
+        
+        // 顶层覆盖一个真实的图片元素（绕过安全限制）
+        const qrOverlay = new Image();
+        qrOverlay.src = originalImg.src;
+        qrOverlay.style.position = "absolute";
+        qrOverlay.style.left = `${qrRect.left - pageRect.left}px`;
+        qrOverlay.style.top = `${qrRect.top - pageRect.top}px`;
+        qrOverlay.style.width = `${qrRect.width}px`;
+        qrOverlay.style.height = `${qrRect.height}px`;
+        container.appendChild(qrOverlay);
+        
+        // 清空并更新预览区域
+        const imagePreview = document.getElementById("imagePreview");
+        const generatedImage = document.getElementById("generatedImage");
+        generatedImage.style.display = "none"; // 隐藏原本的 img 标签
+        
+        // 移除旧的 DOM 预览（如果有）
+        const oldDom = imagePreview.querySelector(".dom-preview-wrap");
+        if (oldDom) oldDom.remove();
+        
+        const wrap = document.createElement("div");
+        wrap.className = "dom-preview-wrap";
+        wrap.appendChild(container);
+        imagePreview.insertBefore(wrap, imagePreview.querySelector("p"));
+        
+        imagePreview.classList.add("show");
+        
+        // 提示用户
+        const tip = imagePreview.querySelector("p");
+        tip.innerHTML = '<span style="color:#ff4d4f">由于浏览器安全限制，当前使用默认二维码预览。</span><br/>请截图保存，或点击二维码手动上传您的收款码以支持长按保存。';
+      }
+
+      function readImage(src) {
+        return new Promise((resolve) => {
+          if (!src) {
+            resolve(null);
+            return;
+          }
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => resolve(null);
+          image.src = src;
+        });
+      }
+
+
 
       generateImageBtn.addEventListener("click", async () => {
         generateImageBtn.disabled = true;
@@ -894,7 +967,13 @@
           await generateReceiptImage();
           generateImageBtn.textContent = "重新生成图片";
         } catch (error) {
-          alert(error.message);
+          console.error("生成失败详情:", error);
+          // 如果 canvas 包含了本地图片（Tainted），直接 toDataURL 会报错
+          if (error.name === 'SecurityError' || error.message.includes('Tainted canvases')) {
+            alert("由于浏览器安全限制，默认二维码无法直接导出。请先点击二维码区域手动上传一次您的收款码图片，然后再生成。");
+          } else {
+            alert("生成图片失败: " + error.message);
+          }
           generateImageBtn.textContent = "生成图片";
         } finally {
           generateImageBtn.disabled = false;
@@ -903,6 +982,12 @@
 
       closePreviewBtn.addEventListener("click", () => {
         imagePreview.classList.remove("show");
+        // 恢复 generatedImage 的显示并移除 DOM 预览
+        generatedImage.style.display = "block";
+        const oldDom = imagePreview.querySelector(".dom-preview-wrap");
+        if (oldDom) oldDom.remove();
+        const tip = imagePreview.querySelector("p");
+        tip.innerHTML = '长按图片保存，或转发到微信群';
       });
     </script>
   </body>
