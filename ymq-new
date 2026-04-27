@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>羽毛球 AA 结算台</title>
+    <style>
+      :root {
+        --bg: #071116;
+        --panel: #0d1b22;
+        --panel-2: #102630;
+        --line: rgba(116, 232, 213, 0.18);
+        --text: #eefaf8;
+        --muted: #8fa7aa;
+        --cyan: #28e0c4;
+        --blue: #42a5ff;
+        --orange: #ff9e57;
+        --green-soft: rgba(40, 224, 196, 0.13);
+        --blue-soft: rgba(66, 165, 255, 0.13);
+        --orange-soft: rgba(255, 158, 87, 0.13);
+        --shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      html {
+        background: var(--bg);
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        padding: 14px;
+        color: var(--text);
+        background:
+          linear-gradient(135deg, rgba(40, 224, 196, 0.17), transparent 28%),
+          linear-gradient(225deg, rgba(66, 165, 255, 0.14), transparent 30%),
+          var(--bg);
+        font-family: Inter, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", Arial, sans-serif;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .app {
+        width: min(1120px, calc(100vw - 28px));
+        max-height: calc(100vh - 28px);
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+        gap: 16px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(17, 40, 50, 0.96), rgba(10, 25, 31, 0.96));
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .controls {
+        padding: 22px;
+      }
+
+      .hero {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--cyan);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.16em;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(32px, 4vw, 48px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .status {
+        min-width: 128px;
+        padding: 10px 12px;
+        border: 1px solid rgba(40, 224, 196, 0.28);
+        border-radius: 999px;
+        color: var(--cyan);
+        background: var(--green-soft);
+        text-align: center;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .group {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .group-head {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .chip {
+        padding: 5px 8px;
+        border-radius: 999px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.06);
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .sentence {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: nowrap;
+        gap: 0;
+        color: var(--text);
+        font-size: clamp(18px, 2.15vw, 24px);
+        font-weight: 850;
+        line-height: 1.65;
+        min-width: 0;
+        white-space: nowrap;
+      }
+
+      .people-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      input[type="number"] {
+        width: 78px;
+        height: 44px;
+        margin: 0 6px;
+        border: 0;
+        border-bottom: 2px solid rgba(238, 250, 248, 0.62);
+        border-radius: 0;
+        padding: 0 3px;
+        color: var(--text);
+        background: rgba(40, 224, 196, 0.07);
+        outline: none;
+        font-size: 18px;
+        font-weight: 900;
+        text-align: center;
+        appearance: textfield;
+      }
+
+      input[type="number"]:focus {
+        border-bottom-color: var(--cyan);
+        box-shadow: 0 10px 24px rgba(40, 224, 196, 0.08);
+      }
+
+      .num-short {
+        width: 58px !important;
+      }
+
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        margin: 0;
+        appearance: none;
+      }
+
+      .derived-card {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-left: 10px;
+        padding: 7px 10px;
+        border: 1px solid rgba(40, 224, 196, 0.18);
+        border-radius: 999px;
+        background: rgba(40, 224, 196, 0.07);
+      }
+
+      .derived-card span {
+        display: inline;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .derived-card strong {
+        display: inline;
+        margin-top: 0;
+        color: var(--cyan);
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .dashboard {
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .total-card {
+        padding: 10px 2px 12px;
+        display: flex;
+        align-items: baseline;
+        justify-content: flex-end;
+        gap: 8px;
+        border-bottom: 1px solid rgba(143, 167, 170, 0.18);
+      }
+
+      .metric-label {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .total-value {
+        margin-top: 0;
+        color: var(--cyan);
+        font-size: clamp(30px, 4.4vw, 46px);
+        line-height: 1;
+        font-weight: 950;
+      }
+
+      .pay-grid {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .pay-card {
+        min-height: 126px;
+        padding: 16px;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .pay-card.male {
+        border: 1px solid rgba(66, 165, 255, 0.26);
+        background: var(--blue-soft);
+      }
+
+      .pay-card.female {
+        border: 1px solid rgba(255, 158, 87, 0.28);
+        background: var(--orange-soft);
+      }
+
+      .pay-card strong {
+        font-size: clamp(30px, 4.2vw, 46px);
+        line-height: 1;
+      }
+
+      .pay-card.male strong {
+        color: var(--blue);
+      }
+
+      .pay-card.female strong {
+        color: var(--orange);
+      }
+
+      .breakdown {
+        margin-top: 12px;
+        display: grid;
+        gap: 8px;
+        padding: 14px 0;
+        border-top: 1px dashed rgba(143, 167, 170, 0.28);
+        border-bottom: 1px dashed rgba(143, 167, 170, 0.28);
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.35;
+      }
+
+      .row strong {
+        color: var(--text);
+        text-align: right;
+      }
+
+      .qr-section {
+        margin-top: auto;
+        padding-top: 12px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .qr-box {
+        position: relative;
+        width: min(172px, 25vh);
+        aspect-ratio: 1;
+        border: 1px solid rgba(143, 167, 170, 0.22);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.045);
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .qr-placeholder {
+        position: absolute;
+        inset: 14px;
+        border-radius: 10px;
+        background:
+          radial-gradient(circle at 72% 20%, rgba(238, 250, 248, 0.8) 0 9%, transparent 9.5%),
+          linear-gradient(33deg, #28e0c4 0 43%, transparent 43.5%),
+          linear-gradient(151deg, transparent 0 53%, #42a5ff 53.5% 100%),
+          linear-gradient(22deg, transparent 0 58%, #1a7698 58.5% 100%),
+          rgba(255, 255, 255, 0.92);
+      }
+
+      .qr-box img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        object-fit: cover;
+        background: #fff;
+      }
+
+      .qr-box.has-image .qr-placeholder {
+        display: none;
+      }
+
+      .qr-box.has-image img {
+        display: block;
+      }
+
+      .qr-box input {
+        display: none;
+      }
+
+      .pay-title {
+        margin: 0 0 6px;
+        font-size: clamp(22px, 3vw, 32px);
+        line-height: 1.08;
+        font-weight: 950;
+      }
+
+      .pay-sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+
+      @media (max-width: 860px) {
+        body {
+          padding: 8px;
+        }
+
+        .app {
+          width: calc(100vw - 16px);
+          max-height: none;
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+
+        .controls,
+        .dashboard {
+          padding: 12px;
+        }
+
+        .hero {
+          margin-bottom: 10px;
+        }
+
+        h1 {
+          font-size: 28px;
+        }
+
+        .status {
+          display: none;
+        }
+
+        .group {
+          padding: 10px;
+        }
+
+        .derived-card {
+          margin-left: 6px;
+          padding: 5px 8px;
+        }
+
+        .derived-card strong {
+          font-size: 15px;
+        }
+
+        input[type="number"] {
+          width: 58px;
+          height: 32px;
+          font-size: 16px;
+        }
+
+        .sentence {
+          font-size: clamp(15px, 4vw, 18px);
+          line-height: 1.55;
+        }
+
+        .people-row {
+          gap: 8px;
+        }
+
+        .num-short {
+          width: 42px !important;
+        }
+
+        .total-card {
+          padding: 6px 2px 8px;
+        }
+
+        .total-value {
+          font-size: 32px;
+        }
+
+        .pay-card {
+          min-height: 88px;
+          padding: 12px;
+        }
+
+        .breakdown {
+          margin-top: 8px;
+          padding: 8px 0;
+          gap: 5px;
+        }
+
+        .qr-section {
+          padding-top: 8px;
+        }
+
+        .qr-box {
+          width: min(116px, 20vh);
+        }
+      }
+
+      @media (max-width: 520px) {
+        body {
+          min-height: 100dvh;
+          place-items: start center;
+          padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+        }
+
+        .app {
+          width: 100%;
+          gap: 8px;
+          overflow-x: hidden;
+        }
+
+        .panel {
+          border-radius: 14px;
+          box-shadow: none;
+        }
+
+        .controls,
+        .dashboard {
+          padding: 10px;
+        }
+
+        .hero {
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+
+        .eyebrow {
+          margin-bottom: 5px;
+          font-size: 10px;
+          letter-spacing: 0.13em;
+        }
+
+        h1 {
+          font-size: 25px;
+        }
+
+        .form-grid {
+          gap: 8px;
+        }
+
+        .group {
+          padding: 9px 10px;
+          border-radius: 12px;
+        }
+
+        .group-head {
+          margin-bottom: 5px;
+        }
+
+        .chip {
+          padding: 4px 7px;
+          font-size: 11px;
+        }
+
+        .sentence {
+          flex-wrap: wrap;
+          column-gap: 0;
+          row-gap: 5px;
+          font-size: 16px;
+          line-height: 1.55;
+          white-space: normal;
+        }
+
+        input[type="number"] {
+          width: 56px;
+          height: 30px;
+          margin: 0 4px;
+          font-size: 16px;
+        }
+
+        .num-short {
+          width: 40px !important;
+        }
+
+        .derived-card {
+          margin: 4px 0 0 0;
+          padding: 5px 8px;
+          max-width: 100%;
+        }
+
+        .people-row {
+          grid-template-columns: 1fr 1fr;
+          min-width: 0;
+        }
+
+        .total-card {
+          justify-content: space-between;
+          padding: 4px 0 8px;
+        }
+
+        .total-value {
+          font-size: 30px;
+        }
+
+        .pay-grid {
+          gap: 8px;
+          margin-top: 8px;
+        }
+
+        .pay-card {
+          min-height: 78px;
+          padding: 10px;
+          border-radius: 12px;
+        }
+
+        .pay-card strong {
+          font-size: 27px;
+        }
+
+        .metric-label,
+        .row,
+        .pay-sub {
+          font-size: 12px;
+        }
+
+        .breakdown {
+          margin-top: 7px;
+          padding: 7px 0;
+          gap: 4px;
+        }
+
+        .qr-section {
+          grid-template-columns: auto 1fr;
+          gap: 10px;
+          padding-top: 8px;
+        }
+
+        .qr-box {
+          width: 82px;
+          border-radius: 12px;
+        }
+
+        .qr-placeholder {
+          inset: 9px;
+        }
+
+        .pay-title {
+          margin-bottom: 3px;
+          font-size: 22px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        h1 {
+          font-size: 23px;
+        }
+
+        .sentence {
+          font-size: 15px;
+        }
+
+        input[type="number"] {
+          width: 50px;
+        }
+
+        .num-short {
+          width: 36px !important;
+        }
+
+        .pay-card strong {
+          font-size: 24px;
+        }
+      }
+
+      @media (max-width: 430px) {
+        .people-row {
+          grid-template-columns: 1fr;
+          gap: 5px;
+        }
+
+        .chip {
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .breakdown .row:last-child {
+          align-items: flex-start;
+        }
+
+        .breakdown .row:last-child strong {
+          max-width: 66%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel controls">
+        <header class="hero">
+          <div>
+            <p class="eyebrow">AA SETTLEMENT CONSOLE</p>
+            <h1>羽毛球结算台</h1>
+          </div>
+          <div class="status">实时计算中</div>
+        </header>
+
+        <div class="form-grid">
+          <section class="group">
+            <div class="group-head">
+              <span class="chip">全员平摊</span>
+            </div>
+            <div class="sentence">
+              <span>场地费：</span>
+              <input class="num-short" id="courtCount" type="number" min="0" max="999" step="1" />
+              <span>块场地，每小时</span>
+              <input id="hourlyPrice" type="number" min="0" max="999" step="1" />
+              <span>元</span>
+              <div class="derived-card">
+                <span>场地费用</span>
+                <strong id="courtTotalPreview">180 元</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="group">
+            <div class="group-head">
+              <span class="chip">每桶 12 个</span>
+            </div>
+            <div class="sentence">
+              <span>球费：</span>
+              <input id="tubePrice" type="number" min="0" max="999" step="1" />
+              <span>元/桶，每桶 12 个，共用</span>
+              <input class="num-short" id="usedBalls" type="number" min="0" max="999" step="1" />
+              <span>个</span>
+              <div class="derived-card">
+                <span>球费</span>
+                <strong id="ballTotalPreview">90 元</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="group">
+            <div class="group-head">
+              <span class="chip">男 1 份 / 女 0.5 份</span>
+            </div>
+            <div class="people-row">
+              <div class="sentence">
+                <span>男生：</span>
+                <input class="num-short" id="maleCount" type="number" min="0" max="999" step="1" />
+                <span>人</span>
+              </div>
+              <div class="sentence">
+                <span>女生：</span>
+                <input class="num-short" id="femaleCount" type="number" min="0" max="999" step="1" />
+                <span>人</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <aside class="panel dashboard" aria-live="polite">
+        <section class="total-card">
+          <div class="metric-label">活动总计</div>
+          <div class="total-value" id="grandTotalText">270 元</div>
+        </section>
+
+        <section class="pay-grid">
+          <div class="pay-card male">
+            <span class="metric-label">男生每人</span>
+            <strong id="malePayText">29.25 元</strong>
+          </div>
+          <div class="pay-card female">
+            <span class="metric-label">女生每人</span>
+            <strong id="femalePayText">23.63 元</strong>
+          </div>
+        </section>
+
+        <section class="breakdown">
+          <div class="row">
+            <span>场地费</span>
+            <strong id="courtLine">180 元</strong>
+          </div>
+          <div class="row">
+            <span>球费</span>
+            <strong id="ballLine">90 元</strong>
+          </div>
+          <div class="row">
+            <span>人数</span>
+            <strong id="peopleLine">男生 6 人，女生 4 人</strong>
+          </div>
+          <div class="row">
+            <span>规则</span>
+            <strong>场地全员 AA，女生球费减半</strong>
+          </div>
+        </section>
+
+        <section class="qr-section" aria-label="二维码付款">
+          <label class="qr-box" id="qrBox" title="点击上传收款二维码">
+            <span class="qr-placeholder"></span>
+            <img id="qrPreview" alt="收款二维码" />
+            <input id="qrInput" type="file" accept="image/*" />
+          </label>
+          <div>
+            <p class="pay-title">扫码付款</p>
+            <p class="pay-sub">点击二维码区域可替换收款码<br />使用网址：AA.cn.MyOS.run</p>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <script>
+      const fields = {
+        courtCount: document.getElementById("courtCount"),
+        hourlyPrice: document.getElementById("hourlyPrice"),
+        tubePrice: document.getElementById("tubePrice"),
+        usedBalls: document.getElementById("usedBalls"),
+        maleCount: document.getElementById("maleCount"),
+        femaleCount: document.getElementById("femaleCount"),
+      };
+
+      const output = {
+        grandTotalText: document.getElementById("grandTotalText"),
+        malePayText: document.getElementById("malePayText"),
+        femalePayText: document.getElementById("femalePayText"),
+        courtTotalPreview: document.getElementById("courtTotalPreview"),
+        ballTotalPreview: document.getElementById("ballTotalPreview"),
+        courtLine: document.getElementById("courtLine"),
+        ballLine: document.getElementById("ballLine"),
+        peopleLine: document.getElementById("peopleLine"),
+      };
+
+      const defaults = {
+        courtCount: 2,
+        hourlyPrice: 45,
+        tubePrice: 90,
+        usedBalls: 12,
+        maleCount: 6,
+        femaleCount: 4,
+      };
+
+      function numberValue(input) {
+        const value = Number(input.value);
+        return Number.isFinite(value) && value > 0 ? value : 0;
+      }
+
+      function money(value) {
+        if (!Number.isFinite(value)) return "0";
+        return Number.isInteger(value) ? String(value) : value.toFixed(2);
+      }
+
+      function calculate() {
+        const courtCount = numberValue(fields.courtCount);
+        const hourlyPrice = numberValue(fields.hourlyPrice);
+        const tubePrice = numberValue(fields.tubePrice);
+        const usedBalls = numberValue(fields.usedBalls);
+        const maleCount = numberValue(fields.maleCount);
+        const femaleCount = numberValue(fields.femaleCount);
+        const courtTotal = courtCount * hourlyPrice;
+        const ballTotal = (tubePrice / 12) * usedBalls;
+        const peopleCount = maleCount + femaleCount;
+        const ballUnits = maleCount + femaleCount * 0.5;
+
+        const courtEach = peopleCount > 0 ? courtTotal / peopleCount : 0;
+        const maleBallEach = ballUnits > 0 ? ballTotal / ballUnits : 0;
+        const femaleBallEach = maleBallEach * 0.5;
+        const grandTotal = courtTotal + ballTotal;
+
+        output.grandTotalText.textContent = `${money(grandTotal)} 元`;
+        output.malePayText.textContent = `${money(courtEach + maleBallEach)} 元`;
+        output.femalePayText.textContent = `${money(courtEach + femaleBallEach)} 元`;
+        output.courtTotalPreview.textContent = `${money(courtTotal)} 元`;
+        output.ballTotalPreview.textContent = `${money(ballTotal)} 元`;
+        output.courtLine.textContent = `${money(courtTotal)} 元`;
+        output.ballLine.textContent = `${money(ballTotal)} 元`;
+        output.peopleLine.textContent = `男生 ${money(maleCount)} 人，女生 ${money(femaleCount)} 人`;
+      }
+
+      Object.values(fields).forEach((field) => {
+        field.addEventListener("input", calculate);
+      });
+
+      Object.entries(defaults).forEach(([key, value]) => {
+        fields[key].value = value;
+      });
+      calculate();
+
+      document.getElementById("qrInput").addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const preview = document.getElementById("qrPreview");
+        const box = document.getElementById("qrBox");
+        preview.src = URL.createObjectURL(file);
+        box.classList.add("has-image");
+      });
+    </script>
+  </body>
+</html>
