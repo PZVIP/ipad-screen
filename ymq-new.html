@@ -73,10 +73,21 @@
       .amount-value {
         display: block;
         margin-top: 0;
-        font-size: clamp(48px, 11vw, 76px);
-        line-height: 1;
+        font-size: clamp(32px, 8vw, 60px);
+        line-height: 1.2;
         font-weight: 900;
-        letter-spacing: -1px;
+        letter-spacing: -0.5px;
+      }
+
+      .amount-label-small {
+        font-size: 0.67em; /* 约 2/3 大小 */
+        font-weight: 600;
+        margin-right: 2px;
+      }
+
+      .amount-sep {
+        margin: 0 4px;
+        opacity: 0.6;
       }
 
       .amount-tip {
@@ -129,8 +140,8 @@
       .qr-box {
         position: relative;
         display: block;
-        width: min(36%, 230px);
-        min-width: 132px;
+        width: 44.4%; /* 占页面宽度的 4/9 */
+        min-width: 140px;
         aspect-ratio: 1;
         margin: 0 auto;
         border: 1px solid var(--line);
@@ -252,12 +263,45 @@
         border-bottom: 0;
       }
 
-      .people-row.equal .female-person {
+      .people-row.equal .female-person,
+      .people-row.equal .male-label {
         display: none;
       }
 
       .people-row.equal {
         justify-content: flex-start;
+      }
+
+      .summary-detail {
+        padding: 12px 24px;
+        background: #fdfdfd;
+        border-top: 1px dashed var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .summary-detail-row {
+        display: flex;
+        justify-content: flex-end;
+        align-items: baseline;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .summary-total {
+        margin-top: 4px;
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
+        font-size: 16px;
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .summary-total strong {
+        color: #ff4d4f;
+        font-size: 20px;
+        margin-left: 4px;
       }
 
       .inline-input {
@@ -469,8 +513,8 @@
         }
 
         .qr-box {
-          width: min(36%, 190px);
-          min-width: 122px;
+          width: 44.4%;
+          min-width: 130px;
         }
 
         .input-row {
@@ -552,8 +596,7 @@
       <section class="hero">
         <h1>羽毛球活动收款</h1>
         <div class="main-amount">
-          <span class="amount-label" id="mainAmountLabel">男生 / 女生</span>
-          <strong class="amount-value" id="mainAmountText">¥0</strong>
+          <strong class="amount-value" id="mainAmountText">每人应付：¥0</strong>
         </div>
         <p class="amount-tip">填写人数和费用后自动计算应付金额</p>
       </section>
@@ -561,8 +604,7 @@
       <section class="content">
         <section class="card qr-card">
           <div class="pay-recommend">
-            <span class="wechat-dot">微</span>
-            <span>推荐使用微信支付</span>
+            <span>请使用微信支付</span>
           </div>
           <label class="qr-box has-image" id="qrBox" title="点击切换收款二维码">
             <span class="qr-placeholder"></span>
@@ -574,8 +616,8 @@
 
         <section class="card mode-card">
           <div class="mode-switch" aria-label="分摊模式">
-            <button class="mode-btn" id="equalModeBtn" type="button">男女平等</button>
-            <button class="mode-btn active" id="halfModeBtn" type="button">女生球费减半</button>
+            <button class="mode-btn active" id="equalModeBtn" type="button">全场AA模式</button>
+            <button class="mode-btn" id="halfModeBtn" type="button">女球减半模式</button>
           </div>
         </section>
 
@@ -586,8 +628,7 @@
               <input class="inline-input short" id="courtCount" type="number" min="0" max="999" step="1" />
               <span>小时场地，</span>
               <input class="inline-input" id="hourlyPrice" type="number" min="0" max="999" step="1" />
-              <span>元/时，共</span>
-              <span class="derived-pill" id="courtTotalPreview">0 元</span>
+              <span>元/时</span>
             </div>
           </div>
 
@@ -597,19 +638,28 @@
               <input class="inline-input" id="tubePrice" type="number" min="0" max="999" step="1" />
               <span>元/桶，用</span>
               <input class="inline-input short" id="usedBalls" type="number" min="0" max="999" step="1" />
-              <span>个，共</span>
-              <span class="derived-pill" id="ballTotalPreview">0 元</span>
+              <span>个</span>
             </div>
           </div>
 
           <div class="input-row people-row" id="peopleRow">
-            <span id="peoplePrimaryLabel">男生：</span>
+            <span>人数：</span>
             <div class="row-content">
+              <span class="male-label" id="maleLabel">男生：</span>
               <input class="inline-input short" id="maleCount" type="number" min="0" max="999" step="1" />
               <span>人</span>
               <span class="female-person">女生：</span>
               <input class="inline-input short female-person" id="femaleCount" type="number" min="0" max="999" step="1" />
               <span class="female-person">人</span>
+            </div>
+          </div>
+
+          <div class="summary-detail">
+            <div class="summary-detail-row" id="summaryDetailText">
+              场地费 0 元 + 球费 0 元
+            </div>
+            <div class="summary-detail-row summary-total">
+              总计费用 <strong id="summaryTotalText">¥0</strong>
             </div>
           </div>
         </section>
@@ -661,18 +711,16 @@
       };
 
       const output = {
-        mainAmountLabel: document.getElementById("mainAmountLabel"),
         mainAmountText: document.getElementById("mainAmountText"),
         peopleRow: document.getElementById("peopleRow"),
-        peoplePrimaryLabel: document.getElementById("peoplePrimaryLabel"),
         payGrid: document.getElementById("payGrid"),
         malePayCard: document.getElementById("malePayCard"),
         femalePayCard: document.getElementById("femalePayCard"),
         malePayLabel: document.getElementById("malePayLabel"),
         malePayText: document.getElementById("malePayText"),
         femalePayText: document.getElementById("femalePayText"),
-        courtTotalPreview: document.getElementById("courtTotalPreview"),
-        ballTotalPreview: document.getElementById("ballTotalPreview"),
+        summaryDetailText: document.getElementById("summaryDetailText"),
+        summaryTotalText: document.getElementById("summaryTotalText"),
       };
 
       const generateImageBtn = document.getElementById("generateImageBtn");
@@ -680,7 +728,7 @@
       const closePreviewBtn = document.getElementById("closePreviewBtn");
       const generatedImage = document.getElementById("generatedImage");
 
-      let splitMode = "half";
+      let splitMode = "equal";
 
       function numberValue(input) {
         const value = Number(input.value);
@@ -716,10 +764,10 @@
         const femalePay = courtEach + femaleBallEach;
         const equalPay = peopleCount > 0 ? grandTotal / peopleCount : 0;
 
-        output.courtTotalPreview.textContent = `${money(courtTotal)} 元`;
-        output.ballTotalPreview.textContent = `${money(ballTotal)} 元`;
+        output.summaryDetailText.textContent = `场地费 ${money(courtTotal)} 元 + 球费 ${money(ballTotal)} 元`;
+        output.summaryTotalText.textContent = yuan(grandTotal);
+
         output.peopleRow.classList.toggle("equal", splitMode === "equal");
-        output.peoplePrimaryLabel.textContent = splitMode === "equal" ? "人数：" : "男生：";
         output.payGrid.classList.toggle("equal", splitMode === "equal");
         output.femalePayCard.classList.toggle("hidden", splitMode === "equal");
         output.malePayLabel.textContent = splitMode === "equal" ? "每人应付" : "男生每人";
@@ -727,11 +775,9 @@
         output.femalePayText.textContent = yuan(femalePay);
 
         if (splitMode === "equal") {
-          output.mainAmountLabel.textContent = "";
-          output.mainAmountText.textContent = `${yuan(equalPay)} 人均`;
+          output.mainAmountText.innerHTML = `<span class="amount-label-small">每人应付：</span>${yuan(equalPay)}`;
         } else {
-          output.mainAmountLabel.textContent = "男 / 女";
-          output.mainAmountText.textContent = `${yuan(malePay)} / ${yuan(femalePay)}`;
+          output.mainAmountText.innerHTML = `<span class="amount-label-small">男：</span>${yuan(malePay)}<span class="amount-sep">/</span><span class="amount-label-small">女：</span>${yuan(femalePay)}`;
         }
       }
 
