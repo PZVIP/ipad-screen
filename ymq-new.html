@@ -261,7 +261,7 @@
       }
 
       .inline-input {
-        width: 64px;
+        width: 5ch;
         height: 32px;
         margin: 0 3px;
         border: 0;
@@ -281,7 +281,7 @@
       }
 
       .inline-input.short {
-        width: 46px;
+        /* 移除特定的宽度覆盖，统一使用 4 个数字宽度 */
       }
 
       input::-webkit-outer-spin-button,
@@ -495,13 +495,13 @@
         }
 
         .inline-input {
-          width: 56px;
+          width: 5ch;
           height: 30px;
           font-size: 16px;
         }
 
         .inline-input.short {
-          width: 42px;
+          /* 统一宽度 */
         }
 
         .derived-pill {
@@ -533,12 +533,12 @@
         }
 
         .inline-input {
-          width: 50px;
+          width: 5ch;
           font-size: 16px;
         }
 
         .inline-input.short {
-          width: 38px;
+          /* 统一宽度 */
         }
 
         .result-grid:not(.equal) {
@@ -564,9 +564,9 @@
             <span class="wechat-dot">微</span>
             <span>推荐使用微信支付</span>
           </div>
-          <label class="qr-box" id="qrBox" title="点击上传收款二维码">
+          <label class="qr-box has-image" id="qrBox" title="点击切换收款二维码">
             <span class="qr-placeholder"></span>
-            <img id="qrPreview" alt="收款二维码" />
+            <img id="qrPreview" src="qr.png" alt="收款二维码" />
             <input id="qrInput" type="file" accept="image/*" />
           </label>
           <p class="qr-tip">长按识别二维码付款</p>
