@@ -815,9 +815,12 @@
         clone.style.paddingBottom = "20px"; // 只保留少许边距美观
         clone.style.height = "auto";
         
-        // 隐藏不需要出现在图片中的元素（如生成按钮区域）
+        // 隐藏不需要出现在图片中的元素
         const actionArea = clone.querySelector(".generate-action");
         if (actionArea) actionArea.style.display = "none";
+        
+        const modeSwitch = clone.querySelector(".mode-switch");
+        if (modeSwitch) modeSwitch.style.display = "none";
 
         const clonedImg = clone.querySelector("#qrPreview");
         
