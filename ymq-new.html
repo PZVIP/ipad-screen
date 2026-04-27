@@ -185,6 +185,11 @@
         padding: 8px;
       }
 
+      .capture-source .mode-card,
+      .capture-source .generate-action {
+        display: none;
+      }
+
       .mode-switch {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -761,30 +766,9 @@
       });
 
       async function generateReceiptImage() {
-        const canvas = await renderReceiptCanvas();
+        const canvas = await renderCurrentPageCanvas();
         generatedImage.src = canvas.toDataURL("image/png");
         imagePreview.classList.add("show");
-      }
-
-      function drawRoundRect(ctx, x, y, width, height, radius, fillStyle) {
-        const r = Math.min(radius, width / 2, height / 2);
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + width, y, x + width, y + height, r);
-        ctx.arcTo(x + width, y + height, x, y + height, r);
-        ctx.arcTo(x, y + height, x, y, r);
-        ctx.arcTo(x, y, x + width, y, r);
-        ctx.closePath();
-        ctx.fillStyle = fillStyle;
-        ctx.fill();
-      }
-
-      function drawText(ctx, text, x, y, size, color, weight = 700, align = "left") {
-        ctx.fillStyle = color;
-        ctx.font = `${weight} ${size}px "PingFang SC", "Microsoft YaHei", Arial`;
-        ctx.textAlign = align;
-        ctx.textBaseline = "middle";
-        ctx.fillText(text, x, y);
       }
 
       function readImage(src) {
@@ -800,117 +784,60 @@
         });
       }
 
-      function drawPlaceholderQr(ctx, x, y, size) {
-        drawRoundRect(ctx, x, y, size, size, 18, "#f7faf9");
-        ctx.fillStyle = "#63aaf3";
-        ctx.fillRect(x + 18, y + 18, size - 36, size - 36);
-        ctx.fillStyle = "#5bc16c";
-        ctx.beginPath();
-        ctx.moveTo(x + 18, y + size * 0.48);
-        ctx.lineTo(x + size - 18, y + size * 0.72);
-        ctx.lineTo(x + size - 18, y + size - 18);
-        ctx.lineTo(x + 18, y + size - 18);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.moveTo(x + 18, y + size * 0.36);
-        ctx.lineTo(x + size * 0.5, y + size * 0.58);
-        ctx.lineTo(x + size - 18, y + size * 0.45);
-        ctx.lineTo(x + size * 0.5, y + size * 0.68);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "#d8dcdf";
-        ctx.beginPath();
-        ctx.arc(x + size * 0.72, y + size * 0.27, size * 0.08, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      async function renderCurrentPageCanvas() {
+        const page = document.querySelector(".page");
+        const clone = page.cloneNode(true);
+        clone.classList.add("capture-source");
+        clone.querySelectorAll("input").forEach((input) => {
+          if (input.type !== "file") {
+            input.setAttribute("value", input.value);
+          }
+        });
 
-      async function renderReceiptCanvas() {
-        const w = 750;
-        const h = 1120;
-        const scale = 2;
+        const width = Math.ceil(page.offsetWidth);
+        clone.style.width = `${width}px`;
+        clone.style.minHeight = "auto";
+        clone.style.margin = "0";
+
+        const wrapper = document.createElement("div");
+        wrapper.style.position = "fixed";
+        wrapper.style.left = "-99999px";
+        wrapper.style.top = "0";
+        wrapper.style.width = `${width}px`;
+        wrapper.appendChild(clone);
+        document.body.appendChild(wrapper);
+
+        const height = Math.ceil(clone.scrollHeight);
+        const css = Array.from(document.querySelectorAll("style"))
+          .map((style) => style.textContent)
+          .join("\n");
+        const markup = new XMLSerializer().serializeToString(clone);
+        const svg = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+            <foreignObject width="100%" height="100%">
+              <div xmlns="http://www.w3.org/1999/xhtml">
+                <style>${css}</style>
+                ${markup}
+              </div>
+            </foreignObject>
+          </svg>
+        `;
+        wrapper.remove();
+
+        const image = await readImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+        if (!image) {
+          throw new Error("图片生成失败，请稍后再试");
+        }
+
+        const scale = Math.min(2, window.devicePixelRatio || 1);
         const canvas = document.createElement("canvas");
-        canvas.width = w * scale;
-        canvas.height = h * scale;
+        canvas.width = width * scale;
+        canvas.height = height * scale;
         const ctx = canvas.getContext("2d");
         ctx.scale(scale, scale);
-
-        const courtCount = fields.courtCount.value || "";
-        const hourlyPrice = fields.hourlyPrice.value || "";
-        const tubePrice = fields.tubePrice.value || "";
-        const usedBalls = fields.usedBalls.value || "";
-        const maleCount = fields.maleCount.value || "";
-        const femaleCount = fields.femaleCount.value || "";
-        const courtTotal = numberValue(fields.courtCount) * numberValue(fields.hourlyPrice);
-        const ballTotal = (numberValue(fields.tubePrice) / 12) * numberValue(fields.usedBalls);
-        const peopleCount = splitMode === "equal" ? numberValue(fields.maleCount) : numberValue(fields.maleCount) + numberValue(fields.femaleCount);
-        const ballUnits = splitMode === "half" ? numberValue(fields.maleCount) + numberValue(fields.femaleCount) * 0.5 : peopleCount;
-        const courtEach = peopleCount > 0 ? courtTotal / peopleCount : 0;
-        const maleBallEach = ballUnits > 0 ? ballTotal / ballUnits : 0;
-        const femaleBallEach = splitMode === "half" ? maleBallEach * 0.5 : maleBallEach;
-        const grandTotal = courtTotal + ballTotal;
-        const malePay = courtEach + maleBallEach;
-        const femalePay = courtEach + femaleBallEach;
-        const equalPay = peopleCount > 0 ? grandTotal / peopleCount : 0;
-        const mainLabel = splitMode === "equal" ? "" : "男 / 女";
-        const mainAmount = splitMode === "equal" ? `${yuan(equalPay)} 人均` : `${yuan(malePay)} / ${yuan(femalePay)}`;
-
         ctx.fillStyle = "#f5f6f7";
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = "#07c160";
-        ctx.fillRect(0, 0, w, 352);
-        drawText(ctx, "羽毛球活动收款", w / 2, 58, 46, "#fff", 900, "center");
-        if (mainLabel) {
-          drawText(ctx, mainLabel, w / 2, 132, 28, "#fff", 800, "center");
-        }
-        drawText(ctx, mainAmount, w / 2, 194, mainAmount.length > 8 ? 52 : 76, "#fff", 900, "center");
-        drawText(ctx, "填写人数和费用后自动计算应付金额", w / 2, 286, 20, "rgba(255,255,255,0.84)", 700, "center");
-
-        drawRoundRect(ctx, 32, 318, w - 64, 306, 28, "#fff");
-        drawRoundRect(ctx, 262, 346, 38, 38, 19, "#07c160");
-        drawText(ctx, "微", 281, 366, 20, "#fff", 900, "center");
-        drawText(ctx, "推荐使用微信支付", 318, 366, 25, "#17191d", 900);
-        const qrSize = 176;
-        const qrX = (w - qrSize) / 2;
-        const qrY = 396;
-        drawRoundRect(ctx, qrX - 12, qrY - 12, qrSize + 24, qrSize + 24, 18, "#fff");
-        ctx.strokeStyle = "#edf0f2";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(qrX - 12, qrY - 12, qrSize + 24, qrSize + 24);
-        const qrImage = await readImage(document.getElementById("qrPreview").src);
-        if (qrImage) {
-          ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
-        } else {
-          drawPlaceholderQr(ctx, qrX, qrY, qrSize);
-        }
-        drawText(ctx, "长按识别二维码付款", w / 2, 596, 18, "#8b9098", 700, "center");
-
-        drawRoundRect(ctx, 32, 646, w - 64, 154, 22, "#fff");
-        drawText(ctx, `场地：${courtCount || "__"} 小时场地，${hourlyPrice || "__"} 元/时，共 ${money(courtTotal)} 元`, 58, 685, 22, "#17191d", 400);
-        drawText(ctx, `球费：${tubePrice || "__"} 元/桶，用 ${usedBalls || "__"} 个，共 ${money(ballTotal)} 元`, 58, 736, 22, "#17191d", 400);
-        const peopleText = splitMode === "equal"
-          ? `人数：${maleCount || "__"} 人`
-          : `男生：${maleCount || "__"} 人    女生：${femaleCount || "__"} 人`;
-        drawText(ctx, peopleText, 58, 787, 22, "#17191d", 400);
-
-        drawRoundRect(ctx, 32, 826, w - 64, 208, 22, "#fff");
-        drawText(ctx, "费用结果", 58, 870, 25, "#17191d", 700);
-        drawRoundRect(ctx, 604, 848, 96, 34, 17, "#dff8e9");
-        drawText(ctx, "自动计算", 652, 866, 16, "#05a957", 900, "center");
-        if (splitMode === "equal") {
-          drawRoundRect(ctx, 58, 898, w - 116, 102, 18, "#f6f7f8");
-          drawText(ctx, "每人应付", w / 2, 928, 20, "#8b9098", 400, "center");
-          drawText(ctx, yuan(equalPay), w / 2, 972, 44, "#17191d", 900, "center");
-        } else {
-          drawRoundRect(ctx, 58, 898, 300, 102, 18, "#f6f7f8");
-          drawRoundRect(ctx, 392, 898, 300, 102, 18, "#f6f7f8");
-          drawText(ctx, "男生每人", 208, 928, 20, "#8b9098", 400, "center");
-          drawText(ctx, yuan(malePay), 208, 972, 40, "#17191d", 900, "center");
-          drawText(ctx, "女生每人", 542, 928, 20, "#8b9098", 400, "center");
-          drawText(ctx, yuan(femalePay), 542, 972, 40, "#17191d", 900, "center");
-        }
-        drawText(ctx, "微信支付", w / 2, 1082, 20, "#7a8088", 500, "center");
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(image, 0, 0, width, height);
         return canvas;
       }
 
