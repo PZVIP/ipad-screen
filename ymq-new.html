@@ -254,9 +254,9 @@
 
       .row-content {
         display: flex;
-        align-items: center;
+        align-items: baseline; /* 核心：父容器也必须是 baseline 对齐 */
         justify-content: flex-end;
-        gap: 4px;
+        gap: 2px;
         min-width: 0;
         font-weight: 400;
         white-space: nowrap;
@@ -313,7 +313,7 @@
 
       .inline-input {
         width: 5ch;
-        height: auto;
+        height: 1.2em; /* 显式设置高度与行高匹配 */
         margin: 0 3px;
         padding: 0;
         border: 0;
@@ -325,8 +325,11 @@
         font-size: 17px;
         font-weight: 400;
         text-align: center;
-        appearance: textfield;
+        appearance: none;
+        -webkit-appearance: none;
         vertical-align: baseline;
+        line-height: normal; /* 让浏览器自动处理基线 */
+        display: inline-block;
       }
 
       .inline-input:focus {
@@ -545,12 +548,14 @@
           justify-content: flex-end;
           row-gap: 4px;
           white-space: normal;
+          align-items: baseline;
         }
 
         .inline-input {
           width: 5ch;
-          height: 30px;
+          height: 1.2em;
           font-size: 16px;
+          vertical-align: baseline;
         }
 
         .inline-input.short {
@@ -603,7 +608,7 @@
   <body>
     <main class="page">
       <section class="hero">
-        <h1>羽毛球活动收款1.0</h1>
+        <h1>羽毛球活动收款</h1>
         <div class="main-amount">
           <strong class="amount-value" id="mainAmountText">每人应付：¥0</strong>
         </div>
