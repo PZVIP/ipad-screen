@@ -114,6 +114,22 @@
       .qr-card {
         padding: 16px 18px 14px;
         text-align: center;
+        position: relative; /* 为装饰元素提供定位基准 */
+        overflow: hidden;
+      }
+
+      .decoration-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none; /* 不干扰点击二维码 */
+        z-index: 0;
+      }
+
+      .badminton-emoji {
+        position: absolute;
+        font-size: 18px;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        user-select: none;
       }
 
       .pay-recommend {
@@ -608,7 +624,7 @@
   <body>
     <main class="page">
       <section class="hero">
-        <h1>羽毛球活动收款1.1</h1>
+        <h1>羽毛球活动收款</h1>
         <div class="main-amount">
           <strong class="amount-value" id="mainAmountText">每人应付：¥0</strong>
         </div>
@@ -617,6 +633,7 @@
 
       <section class="content">
         <section class="card qr-card">
+          <div class="decoration-layer" id="decorationLayer"></div>
           <label class="qr-box has-image" id="qrBox" title="点击切换收款二维码">
             <span class="qr-placeholder"></span>
             <img id="qrPreview" src="qr.png" alt="收款二维码" />
@@ -773,6 +790,50 @@
           output.mainAmountText.innerHTML = `<span class="amount-label-small">男：</span>${yuan(malePay)}<span class="amount-sep">/</span><span class="amount-label-small">女：</span>${yuan(femalePay)}`;
         }
       }
+
+      // 初始化羽毛球装饰
+      function initDecorations() {
+        const layer = document.getElementById('decorationLayer');
+        if (!layer) return;
+        layer.innerHTML = '';
+        
+        const count = 10;
+        const sides = ['left', 'right'];
+        
+        sides.forEach(side => {
+          for (let i = 0; i < count; i++) {
+            const emoji = document.createElement('span');
+            emoji.className = 'badminton-emoji';
+            emoji.textContent = '🏸';
+            
+            // 高度分成 10 等份，每一份内随机位置
+            const sectionHeight = 100 / count;
+            const topBase = i * sectionHeight;
+            const topOffset = Math.random() * (sectionHeight - 10); // 留点边距
+            const top = topBase + topOffset;
+            
+            // 左右两侧随机分布在边缘 20% 范围内
+            let x;
+            if (side === 'left') {
+              x = Math.random() * 18; // 左侧 0-18%
+            } else {
+              x = 82 + Math.random() * 18; // 右侧 82-100%
+            }
+            
+            const rotate = Math.random() * 360;
+            const scale = 0.8 + Math.random() * 0.6; // 随机大小
+            
+            emoji.style.top = `${top}%`;
+            emoji.style.left = `${x}%`;
+            emoji.style.transform = `rotate(${rotate}deg) scale(${scale})`;
+            emoji.style.opacity = 0.6 + Math.random() * 0.4;
+            
+            layer.appendChild(emoji);
+          }
+        });
+      }
+
+      initDecorations();
 
       function setMode(nextMode) {
         splitMode = nextMode;
